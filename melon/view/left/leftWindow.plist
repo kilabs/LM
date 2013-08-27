@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Object</key>
+	<array>
+		<dict>
+			<key>tag</key>
+			<string>0</string>
+			<key>Object</key>
+			<array>
+				<dict>
+					<key>name</key>
+					<string>Service List</string>
+					<key>level</key>
+					<string>1</string>
+					<key>controller</key>
+					<string>mokletdevServiceController</string>
+					<key>tag</key>
+					<string>11</string>
+				</dict>
+				<dict>
+					<key>tag</key>
+					<string>12</string>
+					<key>name</key>
+					<string>Download History</string>
+					<key>level</key>
+					<string>1</string>
+				</dict>
+				<dict>
+					<key>tag</key>
+					<string>13</string>
+					<key>name</key>
+					<string>Download Queue</string>
+					<key>level</key>
+					<string>1</string>
+				</dict>
+			</array>
+			<key>name</key>
+			<string>My Profile</string>
+			<key>level</key>
+			<integer>0</integer>
+			<key>img</key>
+			<string>myprofile</string>
+		</dict>
+		<dict>
+			<key>tag</key>
+			<string>1</string>
+			<key>Object</key>
+			<array>
+				<dict>
+					<key>tag</key>
+					<string>21</string>
+					<key>name</key>
+					<string>Playlist</string>
+					<key>level</key>
+					<string>1</string>
+				</dict>
+				<dict>
+					<key>tag</key>
+					<string>22</string>
+					<key>name</key>
+					<string>All Song</string>
+					<key>level</key>
+					<string>1</string>
+				</dict>
+			</array>
+			<key>name</key>
+			<string>My MelOn</string>
+			<key>level</key>
+			<string>0</string>
+			<key>img</key>
+			<string>mymelon</string>
+		</dict>
+		<dict>
+			<key>tag</key>
+			<string>2</string>
+			<key>name</key>
+			<string>Logout</string>
+			<key>level</key>
+			<string>0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

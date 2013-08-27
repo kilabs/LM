@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model name="" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="2061" systemVersion="12D78" minimumToolsVersion="Xcode 4.3" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Config" representedClassName="Config" syncable="YES">
+        <attribute name="guide" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+    </entity>
+    <entity name="DownloadList" representedClassName="DownloadList" syncable="YES">
+        <attribute name="albumId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="albumName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="artistId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="artistName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="downId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="finished" optional="YES" attributeType="Integer 32" syncable="YES"/>
+        <attribute name="genreId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="genreName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="hitSongYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="playTime" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="realSongid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songTitle" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="status" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="tanggal" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="tipe" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="totalBytesExpectedToRead" optional="YES" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="totalBytesRead" optional="YES" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="userId" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="EUserBrief" representedClassName="EUserBrief" syncable="YES">
+        <attribute name="autoRetentionYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="birthday" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="email" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="ePassword" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="eventSmsYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="gender" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="handsetId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="lastIp" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="msisdn" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="newsMailingYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="nickname" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="param1" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="param2" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="param3" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="productYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="provinceId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="quizAnswer" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="quizId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="receiveRoYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="regDate" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="speedyId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="status" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="telcoId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="updDate" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="username" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userType" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="webPassword" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="ImaginerList" representedClassName="ImaginerList" syncable="YES">
+        <attribute name="realSongid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="status" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="Layanan" representedClassName="Layanan" syncable="YES">
+        <attribute name="allowedReservationYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="allowedWithdrawalCancelYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="allowedWithdrawalReservationYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="autoRetentionYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="chargeDate" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="gracePeriodDown" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="gracePeriodPlay" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="gracePeriodStream" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="limitDown" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="limitDownCnt" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="limitStream" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="limitStreamCnt" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="mobileOnlyYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="ownershipType" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="paymentProdCateId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="paymentProdCateName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="paymentProdId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="paymentProdImg" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="paymentProdName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="paymentWayId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="paymentWayName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="payUserId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="payUserNickname" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="postPaymentProdId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="postPaymentProdName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="postReserveDate" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="ppStatusCd" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="reservedPaymentProdId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="reservedPaymentProdName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="supportDrmYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="supportNonDrmYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="supportStreamYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="useEndDate" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userPaymentProdId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="useStartDate" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="LocalPlaylist" representedClassName="LocalPlaylist" syncable="YES">
+        <attribute name="albumId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="albumName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="artistId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="artistName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="downId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="filePath" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="genreId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="genreName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="hitSongYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="playTime" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="realSongid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songPath" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songTitle" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="tanggal" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="userId" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="LocalPlaylist1" representedClassName="LocalPlaylist1" syncable="YES">
+        <attribute name="albumId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="albumName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="artistId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="artistName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="downId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="genreId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="genreName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="hitSongYN" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="playTime" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songPath" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="songTitle" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="tanggal" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="userId" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="PlayerConfig" representedClassName="PlayerConfig" syncable="YES">
+        <attribute name="autoLogin" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="firstUse" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="lastUser" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="lastVolume" optional="YES" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="playOption" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Config" positionX="160" positionY="192" width="128" height="60"/>
+        <element name="DownloadList" positionX="160" positionY="192" width="128" height="330"/>
+        <element name="EUserBrief" positionX="160" positionY="192" width="128" height="465"/>
+        <element name="ImaginerList" positionX="160" positionY="192" width="128" height="90"/>
+        <element name="LocalPlaylist" positionX="160" positionY="192" width="128" height="285"/>
+        <element name="LocalPlaylist1" positionX="160" positionY="192" width="128" height="255"/>
+        <element name="PlayerConfig" positionX="160" positionY="192" width="128" height="120"/>
+        <element name="Layanan" positionX="160" positionY="192" width="128" height="570"/>
+    </elements>
+</model>
