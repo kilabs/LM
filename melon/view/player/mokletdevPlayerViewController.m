@@ -17,12 +17,14 @@
 #import "LocalPlaylist.h"
 #import "LocalPlaylist1.h"
 #import "DownloadList.h"
+#import "LyricList.h"
 #import "YRDropdownView.h"
 #import "songDownloader.h"
 #import <social/Social.h>
 #import <Twitter/Twitter.h>
 #import "AFNetworking.h"
 #include "GlobalDefine.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
 
 @interface mokletdevPlayerViewController ()
 
@@ -48,20 +50,27 @@
 
 @synthesize rotaryKnob;
 
-
 @synthesize gTunggu = _gTunggu;
 
 BOOL isTimerON = NO;
 mokletdevAppDelegate * appDelegate;
 int eProgress = 0;
 
+BOOL isLoadLyric = NO;
+BOOL isProcessLyric = NO;
 
+NSDictionary * responseLyricJSON;
+NSArray * lyricKey;
+
+CGFloat lyricTextTopPos;
+CGSize labelSize;
+CGFloat lyricWidth;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-		self.title=@"Now Playing";
+		self.title=NSLocalizedString(@"Now Playing", nil);
 		self.view.backgroundColor=[UIColor colorWithPatternImage:[UIImage imageNamed:@"player-bawah"]];
         
         appDelegate = (mokletdevAppDelegate *) [[UIApplication sharedApplication] delegate];
@@ -233,7 +242,7 @@ int eProgress = 0;
 				}
 				else{
 					[YRDropdownView showDropdownInView:self.view
-												 title:@"Galat"
+												 title:NSLocalizedString(@"Error", nill)
 												detail:@"Musik Sudah Di tambahkan ke Antrian"
 												 image:[UIImage imageNamed:@"dropdown-alert_warning"]
 									   backgroundImage:[UIImage imageNamed:@"warning"]
@@ -244,7 +253,7 @@ int eProgress = 0;
 			}
 			else{
 				[YRDropdownView showDropdownInView:self.view
-											 title:@"Galat"
+											 title:NSLocalizedString(@"Error", nill)
 											detail:@"Musik Sudah ada di Handset Anda"
 											 image:[UIImage imageNamed:@"dropdown-alert_error"]
 										  animated:YES
@@ -254,7 +263,7 @@ int eProgress = 0;
 		}
 		else{
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Silahkan login terlebih dahulu untuk dapat mengambil lagu."
 										 image:[UIImage imageNamed:@"dropdown-alert_error"]
 									  animated:YES
@@ -265,7 +274,7 @@ int eProgress = 0;
 	}
 	else{
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:@"Musik Sudah ada di Handset Anda"
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -322,15 +331,27 @@ int eProgress = 0;
 - (void) lyricToggle
 {
     NSLog(@"lyricToggle");
+    
     if (LYRIC_ON == (appDelegate.playOption & LYRIC_ON))
     {
         appDelegate.playOption ^= LYRIC_ON;
         [btnLyric setImage:[UIImage imageNamed:@"playerlyricoffbtn" ] forState:UIControlStateNormal];
+        
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:1.0f];
+        lyricContainerWrap.alpha = 0.0;
+        [UIView commitAnimations];
+        
     }
     else
     {
         appDelegate.playOption |= LYRIC_ON;
         [btnLyric setImage:[UIImage imageNamed:@"playerlyriconbtn" ] forState:UIControlStateNormal];
+        
+        [UIView beginAnimations:nil context:nil];
+        [UIView setAnimationDuration:1.0f];
+        lyricContainerWrap.alpha = 1.0;
+        [UIView commitAnimations];
     }
 }
 
@@ -446,10 +467,18 @@ int eProgress = 0;
     {
         [btnShuffle setImage:[UIImage imageNamed:@"playershuffleoffbtn" ] forState:UIControlStateNormal];
     }
+    
+    if (LYRIC_ON == (appDelegate.playOption & LYRIC_ON))
+    {
+        appDelegate.playOption ^= LYRIC_ON;
+    }
+    
 }
 
 - (void) checkPlay
 {
+    //NSLog(@"CheckPlay");
+    
     myPlayer = [MelonPlayer sharedInstance];
     if([myPlayer isPlaying]){
         btnPlayPause.selected = YES;
@@ -489,6 +518,43 @@ int eProgress = 0;
 	animated=YES;
 	
 }
+-(void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    self.gTunggu.hidden = YES;
+    [self.gTunggu setNeedsDisplay];
+    
+    //load volume
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    
+    //get volume prev
+    float prevVolume = [userDefaults floatForKey:@"prevVolume"];
+    myPlayer = [MelonPlayer sharedInstance];
+    
+    if(prevVolume > 0.0) {
+        NSLog(@"prev volume %f",prevVolume);
+        knob.value = prevVolume;
+    }
+    else {
+        
+        if(myPlayer) {
+            knob.value = [myPlayer.streamer getVolume];
+            
+            [userDefaults setFloat:knob.value forKey:@"prevVolume"];
+            [userDefaults synchronize];
+        }
+        //localPlayer = [localplayer sharedInstance];
+        else if(localPlayer) {
+            knob.value = [localPlayer getVolume];
+            
+            [userDefaults setFloat:knob.value forKey:@"prevVolume"];
+            [userDefaults synchronize];
+        }
+    }
+    
+    NSLog(@"KNOB VALUE %f",knob.value);
+}
 -(void)viewDidLayoutSubviews{
 	
 	[self initLayout];
@@ -496,8 +562,11 @@ int eProgress = 0;
 -(void)initLayout{
 
 	 NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",self.sSongId];
-	[albumImageView setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
+    [albumImageView setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
 
 	[songTitle setText:self.sSongTitle];
 	[songAlbumName setText:self.sAlbumName];
@@ -508,7 +577,7 @@ int eProgress = 0;
 {
     [super viewDidLoad];
     
-	NSString *actionSheetTitle = @"Share To Social Media"; //Action Sheet Title
+	NSString *actionSheetTitle = NSLocalizedString(@"Share To Social Media", nil); //Action Sheet Title
 
 	NSString *other1 = @"Facebook";
 	NSString *other2 = @"Twitter";
@@ -607,8 +676,6 @@ int eProgress = 0;
     [btnDownload addTarget:self action:@selector(doDownload) forControlEvents:UIControlEventTouchUpInside];
     [playerControlArea addSubview:btnDownload];
     
-   
-    
     knobContainer = [[[UIView alloc] initWithFrame:CGRectMake(playerControlArea.bounds.size.width - 90.0, eTop -34.0, 70.0, 70.0)] autorelease];
     knobContainer.layer.shadowColor = [UIColor blackColor].CGColor;
     knobContainer.layer.shadowOffset = CGSizeZero;
@@ -625,20 +692,41 @@ int eProgress = 0;
                             floorf((knobContainer.frame.size.height - initialKnobSize) / 2),
                             initialKnobSize,
                             initialKnobSize);
-    knob.labelFont = [UIFont boldSystemFontOfSize:1.0];
-    knob.color = [UIColor colorWithRed:0.0 green:80.0 blue:0.0 alpha:0.50];
+    knob.labelFont = [UIFont boldSystemFontOfSize:14.0];
+    knob.color = [UIColor colorWithRed:236.0/255 green:9.0/255 blue:142.0/255 alpha:1];
     knob.backgroundColor = knobContainer.backgroundColor;
     knob.min = 0.0;
-	knob.value=1.0;
+	//knob.value=1.0;
     knob.max = 3.0;
-    knob.doubleTapValue = 0.50;
-    knob.tripleTapValue = 1.0;
+    knob.doubleTapValue = 1.50;
+    knob.tripleTapValue = 3.0;
  
    // knob.value = [[MPMusicPlayerController applicationMusicPlayer] volume];
-	knob.value=1.0;
-    knob.displaysValue = NO;
-    knob.valueArcWidth = 1.50;
+	//knob.value=1.0;
+    
+    knob.displaysValue = YES;
+    knob.valueArcWidth = 2.0;
     [knobContainer addSubview:knob];
+    
+    /*CGRect knobFrame = CGRectMake(floorf((knobContainer.frame.size.width - initialKnobSize) / 2),
+                                  floorf((knobContainer.frame.size.height - initialKnobSize) / 2),
+                                  initialKnobSize,
+                                  initialKnobSize);
+    self.rotaryKnob = [[MHRotaryKnob alloc] initWithFrame:knobFrame];
+    //self.rotaryKnob.interactionStyle = MHRotaryKnobInteractionStyleRotating;
+    self.rotaryKnob.scalingFactor = 1.5f;
+    self.rotaryKnob.maximumValue = 3.0;
+    self.rotaryKnob.minimumValue = 0.0;
+    self.rotaryKnob.value = 1.0;
+    self.rotaryKnob.defaultValue = self.rotaryKnob.value;
+    self.rotaryKnob.resetsToDefault = YES;
+    self.rotaryKnob.backgroundColor = [UIColor clearColor];
+    self.rotaryKnob.backgroundImage = [UIImage imageNamed:@"Knob Background.png"];
+    [self.rotaryKnob setKnobImage:[UIImage imageNamed:@"Knob.png"] forState:UIControlStateNormal];
+    [self.rotaryKnob setKnobImage:[UIImage imageNamed:@"Knob Highlighted.png"] forState:UIControlStateHighlighted];
+    [self.rotaryKnob setKnobImage:[UIImage imageNamed:@"Knob Disabled.png"] forState:UIControlStateDisabled];
+    //self.rotaryKnob.knobImageCenter = CGPointMake(80.0f, 76.0f);
+    [knobContainer addSubview:rotaryKnob];*/
     
     volumeView = [[[MPVolumeView alloc] initWithFrame:knobContainer.bounds] autorelease];
     volumeView.hidden = YES;
@@ -702,11 +790,63 @@ int eProgress = 0;
     self.gTunggu.hidden = NO;
     
     [self installPlayerNotificationObservers];
+    
+    //lyrics view
+    lyricWidth = eWidth;
+    CGFloat lyricHeight = eHeight - playerControlArea.bounds.size.height-50;
+    lyricContainerWrap = [[[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, lyricWidth, lyricHeight)] autorelease];
+    lyricContainerWrap.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:lyricContainerWrap];
+    lyricContainerWrap.alpha = 0.0;
+    
+    lyricContainer = [[[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, lyricWidth, lyricHeight)] autorelease];
+    lyricContainer.layer.shadowColor = [UIColor blackColor].CGColor;
+    lyricContainer.layer.shadowOffset = CGSizeZero;
+    lyricContainer.layer.shadowRadius = 9.0;
+    lyricContainer.layer.shadowOpacity = 1.0;
+    lyricContainer.alpha = 0.5;
+    lyricContainer.backgroundColor = [UIColor blackColor];
+    [lyricContainerWrap addSubview:lyricContainer];
+    
+    //LYRIC TEXT
+    lyricTextTopPos = (lyricHeight/2) - 45;
+    labelSize = CGSizeMake(lyricWidth, 100);
+    lyricText1 = [[UILabel alloc] init];
+    [lyricText1 setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:16]];
+    lyricText1.text = @"";
+    lyricText1.textColor = [UIColor whiteColor];
+    lyricText1.backgroundColor = [UIColor clearColor];
+    lyricText1.textAlignment = UITextAlignmentCenter;
+    lyricText1.lineBreakMode = UILineBreakModeTailTruncation;
+    [lyricText1 setNumberOfLines:2];
+    
+    CGSize theStringSize = [@"" sizeWithFont:lyricText1.font constrainedToSize:labelSize lineBreakMode:lyricText1.lineBreakMode];
+    //lyricText1 = [[[UILabel alloc] initWithFrame:CGRectMake(0.0, lyricTextTopPos, theStringSize.width, theStringSize.height)] autorelease];
+    lyricText1.frame = CGRectMake(10.0, lyricTextTopPos, lyricWidth - 10, theStringSize.height);
+    [lyricContainerWrap addSubview:lyricText1];
+    
+    lyricText2 = [[[UILabel alloc] init] autorelease];
+    [lyricText2 setFont:[UIFont fontWithName:@"HelveticaNeue" size:14]];
+    lyricText2.text = @"";
+    lyricText2.textColor = [UIColor whiteColor];
+    lyricText2.backgroundColor = [UIColor clearColor];
+    lyricText2.textAlignment = UITextAlignmentCenter;
+    lyricText2.lineBreakMode = UILineBreakModeTailTruncation;
+    [lyricText2 setNumberOfLines:2];
+    
+    CGSize theStringSize1 = [@"" sizeWithFont:lyricText2.font constrainedToSize:labelSize lineBreakMode:lyricText2.lineBreakMode];
+    lyricText2.frame = CGRectMake(10.0, lyricTextTopPos + 50, lyricWidth - 10, theStringSize1.height);
+    [lyricContainerWrap addSubview:lyricText2];
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Music Player", nil);
+    
+    NSLog(@"PlayerView Load");
 }
 
 -(void)ttShareClicked{
-		NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",self.sAlbumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *twitContent=[NSString stringWithFormat:@"#MelOnPlaying %@ by %@ %@ via MelOn for IOS", self.sSongTitle, self.sArtistName,shorturl];
+		NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",self.sAlbumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *twitContent=[NSString stringWithFormat:@"#LangitMusik %@ by %@ %@ via LangitMusik for IOS", self.sSongTitle, self.sArtistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
     Class TWTweetClass = NSClassFromString(@"TWTweetComposeViewController");
     if (TWTweetClass != nil)
@@ -742,8 +882,8 @@ int eProgress = 0;
 }
 
 -(void)fbShareClicked{
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",self.sAlbumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via MelOn for IOS", self.sSongTitle, self.sAlbumName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",self.sAlbumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via LangitMusik for IOS", self.sSongTitle, self.sAlbumName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
 	
 	if([SLComposeViewController isAvailableForServiceType:SLServiceTypeFacebook]) {
@@ -793,6 +933,13 @@ int eProgress = 0;
 - (void)controlValueDidChange:(float)value sender:(id)sender
 {
     //[[MPMusicPlayerController applicationMusicPlayer] setVolume:value];
+    //NSLog(@"controlValueDidChange %f",value);
+    
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    
+    [userDefaults setFloat:value forKey:@"prevVolume"];
+    [userDefaults synchronize];
+    
     if(myPlayer){
 		[myPlayer.streamer setVolume:value];
 	}
@@ -801,6 +948,8 @@ int eProgress = 0;
 		//[localPlayer setvo]
 		[localPlayer setVolume:value];
 	}
+    
+    rotaryKnob.value = value;
     //AudioQueue audioQueue;
     //AudioQueueSetParameter(audioQueue, kAudioQueueParam_Volume, 0.5);
     
@@ -878,6 +1027,9 @@ int eProgress = 0;
     double duration = [myPlayer getSongDuration];
     int mm = (int) (progress /60);
     int ss = (int) fmod(progress,  60);
+    
+    int nProgress = (int) progress;
+    
     if (duration > 0)
     {
         [playingTime setText:[NSString stringWithFormat:@"%02d:%02d", mm, ss]];
@@ -891,7 +1043,59 @@ int eProgress = 0;
             self.gTunggu.hidden = YES;
             [self.gTunggu setNeedsDisplay];
         }
+        
+        //NSLog(@"nProgress %i", nProgress);
+        
+        if(isLoadLyric) {
+            
+            int cnt = [lyricKey count];
+            int nDuration = (int) duration / 1000;
+            for (int i = 0; i < cnt; i++) {
+                int key, key1;
+                NSString *keyStr, *keyStr1, *valueStr, *valueStr1;
+                
+                @try {
+                    key  = [[lyricKey objectAtIndex: i] intValue];
+                    key1  = (i==cnt-1 ? nDuration : [[lyricKey objectAtIndex: (i+1)] intValue]);
+                    
+                    //NSLog(@"test key %i", key);
+                    //NSLog(@"test key1 %i", key1);
+                    
+                    if(nProgress>= (i==0?0:key) && nProgress < key1){
+                        
+                        //clear text
+                        [lyricText1 setText:@""];
+                        [lyricText2 setText:@""];
+                        
+                        keyStr = [NSString stringWithFormat:@"%i", key];
+                        keyStr1 = [NSString stringWithFormat:@"%i", key1];
+                        
+                        valueStr = [responseLyricJSON objectForKey:keyStr];
+                        valueStr1 = [responseLyricJSON objectForKey:keyStr1];
+                        
+                        //NSLog(@"test value %@", valueStr);
+                        //NSLog(@"test value1 %@", valueStr1);
+                        
+                        [lyricText1 setText:valueStr];
+                        [lyricText2 setText:valueStr1];
+                        
+                        //resize ui label
+                        CGSize theStringSize = [valueStr sizeWithFont:lyricText1.font constrainedToSize:labelSize lineBreakMode:lyricText1.lineBreakMode];
+                        lyricText1.frame = CGRectMake(10.0, lyricTextTopPos, lyricWidth - 10, theStringSize.height);
+                        
+                        CGSize theStringSize1 = [valueStr1 sizeWithFont:lyricText2.font constrainedToSize:labelSize lineBreakMode:lyricText2.lineBreakMode];
+                        lyricText2.frame = CGRectMake(10.0, lyricTextTopPos + 50, lyricWidth - 10, theStringSize1.height);
+                        break;
+                    }
+                }
+                @catch (NSException *exception) {
+                }
+                @finally {
+                }
+            }
+        }
     }
+    
     
     //NSLog(@"eProgress: %d.", eProgress);
 //    if (myPlayer.isPlaying)
@@ -962,6 +1166,7 @@ int eProgress = 0;
 
 - (void) playingNewSong:(NSNotification *)notification
 {
+    NSLog(@"playingNewSong PLAYER");
     btnPlayPause.selected = YES;
     
     LocalPlaylist1 * song = (LocalPlaylist1 *) [appDelegate.nowPlayingPlaylistDefault objectAtIndex:appDelegate.nowPlayingSongIndex];
@@ -974,7 +1179,14 @@ int eProgress = 0;
     [songAlbumName setText:sAlbumName];
     [songArtistName setText:sArtistName];
     [songTitle setText:sSongTitle];
-    [albumImageView setImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",song.songId]]]]];
+    //[albumImageView setImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",song.songId]]]]];
+    
+    NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",self.sSongId];
+    [albumImageView setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
     
     [self performSelector:@selector(checkProgress1) withObject:nil afterDelay:1.0];
     
@@ -982,6 +1194,20 @@ int eProgress = 0;
         [self createTimer];
     
     self.gTunggu.hidden = YES;
+    
+    //init var to reset value
+    isLoadLyric = NO;
+    isProcessLyric = NO;
+    
+    responseLyricJSON = nil;
+    [responseLyricJSON release];
+    lyricKey = nil;
+    [lyricKey release];
+    
+    [lyricText1 setText:@""];
+    [lyricText2 setText:@""];
+    
+    [self loadLyricAPI];
 }
 
 - (void) pausing:(NSNotification *)notification
@@ -1016,6 +1242,99 @@ int eProgress = 0;
 - (void) waiting:(NSNotification *)notification
 {
     btnPlayPause.selected = NO;
+}
+
+- (void) loadLyricAPI
+{
+    NSLog(@"Load Lyric API");
+    
+    //check store data
+    NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+    LyricList *musicQ = [LyricList MR_findFirstByAttribute:@"songId" withValue:sSongId inContext:localContext];
+    //NSLog(@"load Lyric FROM local db -> %@", musicQ.songId);
+    if (musicQ){
+        NSLog(@"load Lyric FROM local db");
+        
+        responseLyricJSON = [[NSDictionary alloc] initWithDictionary:musicQ.songLyric];
+        
+        //NSLog(@"responseLyricJSON--.%@",responseLyricJSON);
+        
+        NSArray *keyArray = [responseLyricJSON allKeys];
+        //NSLog(@"keys--.%@", keyArray);
+        
+        NSArray *sortedArray = [keyArray sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 intValue] < [obj2 intValue]) return NSOrderedAscending;
+            else return NSOrderedDescending;
+        }];
+        //NSLog(@"keys sorted--.%@", sortedArray);
+        
+        lyricKey = [[NSArray alloc] initWithArray:sortedArray];
+        
+        //NSLog(@"keys after sorted--.%@", lyricKey);
+        
+        isLoadLyric = YES;
+        
+        return;
+    }
+    
+    if(isProcessLyric == YES) return;
+    
+    NSString *baseUrl=[NSString stringWithFormat:@"%@ajax/get/song/lyric.do?songId=%@",[NSString stringWithUTF8String:WEB_SERVER], sSongId];
+    
+    NSLog(@"loadLyricAPI %@", baseUrl);
+	
+	NSURL *URL=[NSURL URLWithString:baseUrl];
+    
+    AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:URL];
+    //[httpClient setDefaultHeader:@"Content-Type" value:@"application/json"];
+    NSMutableURLRequest * request = [httpClient requestWithMethod:@"GET" path:baseUrl parameters:nil];
+    [httpClient registerHTTPOperationClass:[AFJSONRequestOperation class]];
+	
+    AFJSONRequestOperation *operation=[[AFJSONRequestOperation alloc] initWithRequest:request];
+	
+    //AFHTTPRequestOperation * operation =[[AFHTTPRequestOperation alloc] initWithRequest:request];
+	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        
+        responseLyricJSON = [[NSDictionary alloc] initWithDictionary:responseObject];
+        
+        //NSLog(@"responseLyricJSON--.%@",responseLyricJSON);
+        
+        NSArray *keyArray = [responseLyricJSON allKeys];
+        //NSLog(@"keys--.%@", keyArray);
+        
+        NSArray *sortedArray = [keyArray sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            if ([obj1 intValue] < [obj2 intValue]) return NSOrderedAscending;
+            else return NSOrderedDescending;
+        }];
+        //NSLog(@"keys sorted--.%@", sortedArray);
+        
+        lyricKey = [[NSArray alloc] initWithArray:sortedArray];
+        
+        //NSLog(@"keys after sorted--.%@", lyricKey);
+        
+        if(responseLyricJSON.count > 0){
+            //save to local db
+            NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+            LyricList *local = [LyricList MR_createInContext:localContext];
+            local.songId = sSongId;
+            local.songLyric = [[NSDictionary alloc] initWithDictionary:responseObject];
+            [localContext MR_save];
+        }
+        
+        isLoadLyric = YES;
+		
+	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+		if(error){
+		}
+		
+	}];
+    
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
+	[operation release];
+    
+    isProcessLyric = YES;
 }
 
 - (void) installPlayerNotificationObservers

@@ -127,6 +127,10 @@ static localplayer * instance = nil;
 {
     _playerdatalocal.volume = level;
 }
+- (float) getVolume
+{
+    return _playerdatalocal.volume;
+}
 - (NSString *) songnow{
 	return self.songnowNow;
 }

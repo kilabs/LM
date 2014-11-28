@@ -9,12 +9,13 @@
 #import <UIKit/UIKit.h>
 #import <MediaPlayer/MediaPlayer.h>
 #import "DCKnob.h"
+#import "GAITrackedViewController.h"
 //#import "mokletdevSearchMusicController.h"
 
 @class MHRotaryKnob;
 @class MelonPlayer;
 @class localplayer;
-@interface mokletdevPlayerViewController : UIViewController<UIActionSheetDelegate>
+@interface mokletdevPlayerViewController : GAITrackedViewController<UIActionSheetDelegate>
 {
 	UIButton *backtoBefore;
 	UIButton *search;
@@ -53,12 +54,17 @@
     
     UILabel * playingTime;
     
+    UILabel * lyricText1;
+    UILabel * lyricText2;
+    
     UISlider * songProgress;
     UIImageView * albumImageView;
     UIImageView * space;
     UIView * albumImagePlaceholderView;
     UIView * playerControlArea;
     UIView * knobContainer;
+    UIView * lyricContainerWrap;
+    UIView * lyricContainer;
     UIView * shareItemView;
     DCKnob * knob;
     MPVolumeView * volumeView;
@@ -71,6 +77,7 @@
 	localplayer * localPlayer;
 	UIActionSheet *actionSheet;
 	//mokletdevSearchMusicController *searchWindow;
+    
     
     UIImageView * gTunggu;
 }

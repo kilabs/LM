@@ -41,7 +41,7 @@
 		[header addSubview:title];
 		
 		playlist=[[UITextField alloc]initWithFrame:CGRectMake(25, 60, 250, 33)];
-		playlist.placeholder=@"ex: My playlist or, famous Playlist";
+		playlist.placeholder=@"contoh: playlistku atau Playlist Terkenal";
 
 		playlist.returnKeyType=UIReturnKeyDone;
 		//playlist.contentInset = UIEdgeInsetsMake(-4,-8,0,0);
@@ -79,7 +79,7 @@
 }
 -(void)tambah{
 	if(playlist.text.length<=0){
-		UIAlertView *message = [[UIAlertView alloc] initWithTitle:@"Hello World!"
+		UIAlertView *message = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil)
 														  message:@"KOSONG"
 														 delegate:nil
 												cancelButtonTitle:@"OK"
@@ -105,7 +105,7 @@
 	// NSString * offset = [NSString stringWithFormat:@"%d", (current_page -1) * 10];
     //NSString * limit = @"10";
     
-    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,user_now.username,user_now.webPassword];
+    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId, [NSString stringWithUTF8String:CNAME], [NSString stringWithUTF8String:CPASS], user_now.username,user_now.webPassword];
     NSLog(@"surls--->%@",sURL);
 	NSURL *URL=[NSURL URLWithString:sURL];
 	NSString *properlyEscapedURL = [sURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
@@ -131,7 +131,9 @@
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 
 }

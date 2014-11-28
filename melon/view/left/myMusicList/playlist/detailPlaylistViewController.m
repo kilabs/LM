@@ -23,6 +23,7 @@
 #import <Twitter/Twitter.h>
 #import <accounts/Accounts.h>
 #import "songDownloader.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
 
 
 @interface detailPlaylistViewController ()
@@ -74,14 +75,14 @@ int selectedResultIndex;
 	empty.backgroundColor=[UIColor clearColor];
 	
 	empty_title=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 280, 44)];
-	empty_title.text=@"Playlist Empty";
+	empty_title.text=@"Playlist Kosong";
 	empty_title.backgroundColor=[UIColor clearColor];
 	empty_title.textAlignment=NSTextAlignmentCenter;
 	empty_title.textColor=[UIColor colorWithRed:0.557 green:0.557 blue:0.557 alpha:1];
 	[empty_title setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:17]];
 	
 	empty_text=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 280, 110)];
-	empty_text.text=@"Tidak ada musik di playlist anda, sila tambahkan musik dari direktori lokal anda dengan menekan tombol tambah";
+	empty_text.text=@"Tidak ada musik di playlist anda, silahkan tambahkan musik dari direktori lokal anda dengan menekan tombol tambah";
 	empty_text.numberOfLines=4;
 	empty_text.backgroundColor=[UIColor clearColor];
 	empty_text.textAlignment=NSTextAlignmentCenter;
@@ -218,8 +219,8 @@ int selectedResultIndex;
                               offset, @"offset",
                               limit, @"limit",
                               @"c", @"_DIR",
-                              @"iOS Client", @"_CNAME",
-                              @"DC6AE040A9200D384D4F08C0360A2607", @"_CPASS",
+                              [NSString stringWithUTF8String:CNAME], @"_CNAME",
+                              [NSString stringWithUTF8String:CPASS], @"_CPASS",
                               nil] autorelease];
     
     NSURL * URL = [NSURL URLWithString:sURL];
@@ -257,7 +258,7 @@ int selectedResultIndex;
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
-			[[[[UIAlertView alloc] initWithTitle:@"Galat"
+			[[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
 										 message:@"Terjadi masalah ketika mengambil data dari server. Pastikan koneksi jaringan Anda dan coba kembali lagi."
 										delegate:nil
 							   cancelButtonTitle:@"OK"
@@ -271,7 +272,9 @@ int selectedResultIndex;
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 	
     
@@ -333,8 +336,11 @@ int selectedResultIndex;
     cell.excerpt.text = songItem.artistName;
     cell.albumName.text = songItem.albumName;
     NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",songItem.songId];
-	[cell.thumbnail setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
+    [cell.thumbnail setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
 
    cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	
@@ -369,8 +375,8 @@ int selectedResultIndex;
 	
 	songListObject *dataObject=[self.playlistSongList objectAtIndex:i];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *twitContent=[NSString stringWithFormat:@"#MelOnPlaying %@ by %@ %@ via MelOn for IOS", dataObject.songName, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *twitContent=[NSString stringWithFormat:@"#LangitMusik %@ by %@ %@ via LangitMusik for IOS", dataObject.songName, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
     Class TWTweetClass = NSClassFromString(@"TWTweetComposeViewController");
     if (TWTweetClass != nil)
@@ -410,8 +416,8 @@ int selectedResultIndex;
 	
 	songListObject *dataObject=[self.playlistSongList objectAtIndex:i];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via MelOn for IOS", dataObject.songName, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via LangitMusik for IOS", dataObject.songName, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
 	
 	if([SLComposeViewController isAvailableForServiceType:SLServiceTypeFacebook]) {
@@ -478,7 +484,7 @@ int selectedResultIndex;
                 if ([eLayanan.paymentProdName isEqualToString:@""])
                 {
                     [YRDropdownView showDropdownInView:self.view
-                                                 title:@"Galat"
+                                                 title:NSLocalizedString(@"Error", nill)
                                                 detail:@"Pengambilan lagu tak bisa dilakukan. Periksa kembali produk MelOn Anda. Pastikan Anda mempunyai paket yang betul."
                                                  image:[UIImage imageNamed:@"dropdown-alert_error"]
                      //backgroundImage:[UIImage imageNamed:@"allow"]
@@ -529,7 +535,7 @@ int selectedResultIndex;
 			}
 			else{
 				[YRDropdownView showDropdownInView:self.view
-											 title:@"Galat"
+											 title:NSLocalizedString(@"Error", nill)
 											detail:@"Musik Sudah Di tambahkan ke Antrian"
 											 image:[UIImage imageNamed:@"dropdown-alert_warning"]
 								   backgroundImage:[UIImage imageNamed:@"warning"]
@@ -540,7 +546,7 @@ int selectedResultIndex;
 		}
 		else{
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Musik Sudah ada di Handset Anda"
 										 image:[UIImage imageNamed:@"dropdown-alert_error"]
 									  animated:YES
@@ -550,7 +556,7 @@ int selectedResultIndex;
 	}
 	else{
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:@"Silahkan login terlebih dahulu untuk dapat mengambil lagu."
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -571,7 +577,7 @@ int selectedResultIndex;
 	////http://118.98.31.132:8000/mapi/758965/playlists/130426?_CNAME=Android+Client&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=siraz@timun.com&_UPASS=MTIzNDU2
 	NSMutableArray *users_active = [NSMutableArray arrayWithArray:[EUserBrief MR_findAllSortedBy:@"userId" ascending:YES]];
 	EUserBrief *user_now=[users_active objectAtIndex:0];
-	NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&removeSongId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,self.playlistId,user_now.username,user_now.webPassword,dataObject.songId];
+	NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&removeSongId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,self.playlistId, [NSString stringWithUTF8String:CNAME], [NSString stringWithUTF8String:CPASS], user_now.username,user_now.webPassword,dataObject.songId];
 	NSLog(@"surl--->%@",sURL);
 	
 	NSURL *URL=[NSURL URLWithString:sURL];
@@ -597,7 +603,7 @@ int selectedResultIndex;
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:gagal
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -605,7 +611,9 @@ int selectedResultIndex;
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 	
 

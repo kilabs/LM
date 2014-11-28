@@ -73,7 +73,7 @@ NSString * myPath;
 {
 	//http://118.98.31.135:8000/mapi/purchase/song/product?userId=1224&songId=111380672&drmType=D&bitRate=&otaDownYN=Y&_method=post&_DIR=cu&_UNAME=useremail&_UPASS=userpassword&_CNAME=client_name&_CPASS=client_pass
 	NSString *client=[NSString stringWithFormat:@"iOS Client"];
-	NSString *baseUrl=[NSString stringWithFormat:@"http://118.98.31.135:8000/mapi/purchase/song/product?userId=%@&songId=%@&drmType=D&bitRate=&otaDownYN=Y&_DIR=cu&_UNAME=%@&_UPASS=%@&_CNAME=%@&_CPASS=DC6AE040A9200D384D4F08C0360A2607",userId,songId,email,password,client];
+	NSString *baseUrl=[NSString stringWithFormat:@"%@purchase/song/product?userId=%@&songId=%@&drmType=D&bitRate=&otaDownYN=Y&_DIR=cu&_UNAME=%@&_UPASS=%@&_CNAME=%@&_CPASS=%@",[NSString stringWithUTF8String:MAPI_SERVER],userId,songId,email,password,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS]];
 	NSLog(@"baseUrl adalah-->%@",baseUrl);
 	NSString *properlyEscapedURL = [baseUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 	//  NSString * sURL = [NSString stringWithFormat:@"%@download/history/drm", [NSString stringWithUTF8String:MAPI_SERVER]];
@@ -107,7 +107,9 @@ NSString * myPath;
         _isCancel = YES;
                 
     }];
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 - (void) getSongFile: (NSString *) downloadId userId:(NSString *)userId songId:(NSString *)songId
@@ -282,7 +284,9 @@ NSString * myPath;
         _isAllDownloadFinished = NO;
         _isCancel = YES;
     }];
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     //[httpClient release];
 }
 

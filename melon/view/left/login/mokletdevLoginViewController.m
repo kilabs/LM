@@ -31,7 +31,7 @@ BOOL stayUp;
 		self.view.backgroundColor=[UIColor whiteColor];
 		self.view.layer.cornerRadius=5;
 		Logintext=[[UILabel alloc]init];
-		Logintext.text=@"Login to Melon.co.id";
+		Logintext.text=@"Login to LangitMusiks";
 			[Logintext setFont:[UIFont fontWithName:@"MuseoSans-700" size:18]];
 		Logintext.frame=CGRectMake(0, 0, 300, 40);
 		Logintext.textAlignment=NSTextAlignmentCenter;
@@ -130,8 +130,8 @@ BOOL stayUp;
 {
     NSString * strUrl = [NSString stringWithFormat:@"%@authentication/client", [NSString stringWithUTF8String:MAPI_SERVER]];
     NSDictionary * params = [[NSDictionary alloc] initWithObjectsAndKeys:
-                             @"iOS Client", @"clientName",
-                             @"DC6AE040A9200D384D4F08C0360A2607", @"password",
+                             [NSString stringWithUTF8String:CNAME], @"clientName",
+                             [NSString stringWithUTF8String:CPASS], @"password",
                              nil];
     
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:[NSURL URLWithString: strUrl]];
@@ -150,7 +150,9 @@ BOOL stayUp;
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"authenticationMe failed: %@.", error);
     }];
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [operation release];
     [params release];
     [httpClient release];

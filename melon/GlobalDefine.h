@@ -14,6 +14,12 @@
 #define STREAMING_SERVER    "http://dn.melon.co.id:8100/"
 #define DOWNLOAD_SERVER     "http://ri.melon.co.id:8200/"
 
+#define CNAME               "LangitMusik IOS Client"
+#define CPASS               "DC6AE040A9200D384D4F08C0360A2607"
+
+#define CHANNEL_CODE        "CH0037"
+
+
 #define SHUFFLE_ON          1
 #define LYRIC_ON            2
 #define REPEAT_NO           4
@@ -29,5 +35,9 @@
 #define kNotifIdle           "kIdle"
 
 NSMutableDictionary * user;
+
+#define COLORWITHRED    0.91
+#define COLORWITHGREEN  0.0313
+#define COLORWITHBLUE   0.55
 
 #endif

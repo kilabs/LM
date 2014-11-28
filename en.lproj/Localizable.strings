@@ -1,0 +1,63 @@
+/* 
+  Localizable.strings
+  langitmusik
+
+  Created by MelOn Indonesia, PT on 9/17/13.
+  Copyright (c) 2013 mokletdev. All rights reserved.
+*/
+
+"Phone Number" = "Nomor Handphone";
+"Sign In" = "Login";
+"Password" = "Password";
+"Error" = "Error";
+"Login Failed Message" = "Periksa kembali dan pastikan nama pengguna dan password diisikan dengan benar.";
+"Warning" = "Peringatan";
+"Share To Social Media" = "Bagikan ke media sosial";
+"Now Playing" = "Sedang Dimainkan";
+"Top Chart" = "Top 100";
+"New Release" = "Lagu Baru";
+"Search Music" = "Cari";
+"Music Videos" = "Musik Video";
+"LangitMusik Menu" = "LangitMusik Menu";
+"Search Song" = "Cari";
+"Tutorial" = "Tutorial";
+"Register" = "Register";
+
+"Service List" = "Daftar Layananku";
+"Download History" = "Histori Download";
+"Download Queue" = "Antrian Download";
+
+"Playlist" = "Playlist";
+"All Song" = "Semua Lagu";
+"All Songs" = "Semua Lagu";
+
+"All Song Empty" = "Semua Lagu Kosong";
+"Download Empty" = "Download Kosong";
+
+"Skip" = "Lewati";
+
+"Delete" = "Delete";
+
+"Song" = "Lagu";
+"Album" = "Album";
+"Artist" = "Artis";
+
+"Register Message" = "Silahkan mendaftar di website LangitMusik";
+
+//Tracking Screen Name
+"Screen Name New Release" = "Lagu Baru";
+"Screen Name Top Chart" = "Top 100";
+"Screen Name Search Song" = "Cari Lagu";
+"Screen Name Music Video" = "Musik Video";
+"Screen Name Tutorial" = "Halaman Tutorial";
+"Screen Name Service List" = "Daftar Layananku";
+"Screen Name Download Queue" = "Antrian Download";
+"Screen Name Download History" = "Histori Download";
+"Screen Name All Song" = "Semua Lagu";
+"Screen Name Playlist" = "Playlist";
+"Screen Name Music Player" = "Musik Player";
+"Screen Name Video Player" = "Video Player";
+"Screen Name Album" = "Album Detail %@";
+"Screen Name Artist" = "Artist Detail %@";
+
+

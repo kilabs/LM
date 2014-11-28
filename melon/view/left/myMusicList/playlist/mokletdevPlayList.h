@@ -8,7 +8,8 @@
 
 #import <UIKit/UIKit.h>
 #import "TJSpinner.h"
-@interface mokletdevPlayList : UIViewController <UITableViewDelegate, UITableViewDataSource,UIAlertViewDelegate,UIGestureRecognizerDelegate>
+#import "GAITrackedViewController.h"
+@interface mokletdevPlayList : GAITrackedViewController <UITableViewDelegate, UITableViewDataSource,UIAlertViewDelegate,UIGestureRecognizerDelegate>
 {
 
 	UITableView *playListTable;

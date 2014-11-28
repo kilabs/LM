@@ -29,6 +29,7 @@
 
 @synthesize userb;
 @synthesize btnLogin;
+@synthesize btnRegister;
 @synthesize txtLogin;
 @synthesize txtUserName;
 @synthesize inputUsername;
@@ -57,7 +58,7 @@
 		user_active_now= [[UILabel alloc] initWithFrame: CGRectMake(10,14, 200, 20)];
 		user_active_now.backgroundColor = [UIColor clearColor];
 		user_active_now.textColor=[UIColor colorWithRed:0.941 green:0.941 blue:0.941 alpha:1];
-		user_active_now.text=@"MelOn Menu";
+		user_active_now.text=NSLocalizedString(@"LangitMusik Menu", nil);
 		[user_active_now setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:15]];
 		user_active_now.layer.shadowOpacity = 1.0;
 		user_active_now.layer.shadowRadius = 1.0;
@@ -96,7 +97,7 @@
 		//[btnLogin setTitle:@"Sign In" forState:UIControlStateNormal];
 		//[btnLogin addTarget:self action:@selector(Login:) forControlEvents:UIControlEventTouchUpInside];
 		//[facebookconnect addTarget:self action:@selector(Login) forControlEvents:UIControlEventTouchUpInside];
-		[loginContainer addSubview:facebookconnect];
+		//[loginContainer addSubview:facebookconnect];
 		
 		twitterConnect = [UIButton buttonWithType:UIButtonTypeCustom];
 		[twitterConnect setBackgroundImage:[UIImage imageNamed:@"twitter-login"] forState:UIControlStateNormal];
@@ -133,7 +134,7 @@
 		txtUserName.backgroundColor=[UIColor clearColor];
 		
 		
-		inputUsername=[[UITextField alloc]initWithFrame:CGRectMake(10, 191,230,40)];
+		inputUsername=[[UITextField alloc]initWithFrame:CGRectMake(10, 151,230,40)];
 		//inputUsername.delegate=self;
 		inputUsername.leftView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 40, 20)];
 		inputUsername.leftViewMode = UITextFieldViewModeAlways;
@@ -145,17 +146,17 @@
 		inputUsername.layer.cornerRadius=2.0f;
 		inputUsername.returnKeyType=UIReturnKeyNext;
 		inputUsername.delegate = self;
-		inputUsername.placeholder=@"User Name";
+		inputUsername.placeholder=NSLocalizedString(@"Phone Number", nil);
 		inputUsername.layer.masksToBounds=YES;
 		inputUsername.backgroundColor=[UIColor colorWithPatternImage:[UIImage imageNamed:@"username"]];
 		inputUsername.layer.borderWidth= 1.0f;
 		inputUsername.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
 		//[inputUsername addTarget:self action:@selector(usernameFieldShouldReturn:) forControlEvents:UIControlEventEditingDidEndOnExit];
-		inputUsername.keyboardType = UIKeyboardTypeEmailAddress;
+		inputUsername.keyboardType = UIKeyboardTypePhonePad;
 		inputUsername.autocapitalizationType = UITextAutocapitalizationTypeNone;
 		inputUsername.autocorrectionType = UITextAutocorrectionTypeNo;
 		
-				inputPassword=[[UITextField alloc]initWithFrame:CGRectMake(10, 251,230,40)];
+        inputPassword=[[UITextField alloc]initWithFrame:CGRectMake(10, 211,230,40)];
 		//inputPassword.delegate=self;
 		inputPassword.tag=2;
 		
@@ -170,7 +171,7 @@
 		inputPassword.secureTextEntry=YES;
 		inputPassword.layer.cornerRadius=2.0f;
 		inputPassword.returnKeyType=UIReturnKeyDone;
-		inputPassword.placeholder=@"Password";
+		inputPassword.placeholder=NSLocalizedString(@"Password", nill);
 		inputPassword.layer.masksToBounds=YES;
 		inputPassword.layer.borderWidth= 1.0f;
 		inputPassword.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
@@ -179,12 +180,20 @@
 		
 		btnLogin = [UIButton buttonWithType:UIButtonTypeCustom];
 		[btnLogin setBackgroundImage:[UIImage imageNamed:@"common-navbar"] forState:UIControlStateNormal];
-		btnLogin.frame=CGRectMake(10, 310,230,36);
+		btnLogin.frame=CGRectMake(10, 270,230,36);
 		btnLogin.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:18.0];
-		[btnLogin setTitle:@"Sign In" forState:UIControlStateNormal];
+		[btnLogin setTitle:NSLocalizedString(@"Sign In", nill) forState:UIControlStateNormal];
 		//[btnLogin addTarget:self action:@selector(Login:) forControlEvents:UIControlEventTouchUpInside];
 		[btnLogin addTarget:self action:@selector(Login) forControlEvents:UIControlEventTouchUpInside];
 		[loginContainer addSubview:btnLogin];
+        
+        btnRegister = [UIButton buttonWithType:UIButtonTypeCustom];
+		[btnRegister setBackgroundImage:[UIImage imageNamed:@"common-navbar1"] forState:UIControlStateNormal];
+		btnRegister.frame=CGRectMake(10, 320,230,36);
+		btnRegister.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:18.0];
+		[btnRegister setTitle:NSLocalizedString(@"Register", nill) forState:UIControlStateNormal];
+		[btnRegister addTarget:self action:@selector(Register) forControlEvents:UIControlEventTouchUpInside];
+		[loginContainer addSubview:btnRegister];
 		
 		loginContainer.hidden = NO;
 		MelonListLeft.hidden = YES;
@@ -272,7 +281,9 @@
 			NSLog(@"%@",error);
 		}
 	}];
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
 	[operation release];
 
 	}
@@ -282,6 +293,18 @@
 	
 	
 }
+
+
+- (void) Register
+{
+    UIAlertView *message = [[UIAlertView alloc] initWithTitle:@""
+                                                      message:NSLocalizedString(@"Register Message", nil)
+                                                     delegate:nil
+                                            cancelButtonTitle:@"OK"
+                                            otherButtonTitles:nil];
+    [message show];
+}
+
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
 	
@@ -358,8 +381,8 @@
 {
     NSString * strUrl = [NSString stringWithFormat:@"%@authentication/client", [NSString stringWithUTF8String:MAPI_SERVER]];
     NSDictionary * params = [[[NSDictionary alloc] initWithObjectsAndKeys:
-							  @"iOS Client", @"clientName",
-							  @"DC6AE040A9200D384D4F08C0360A2607", @"password",
+							  [NSString stringWithUTF8String:CNAME], @"clientName",
+							  [NSString stringWithUTF8String:CPASS], @"password",
 							  nil] autorelease];
     
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:[NSURL URLWithString: strUrl]];
@@ -380,7 +403,9 @@
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"authenticationMe failed: %@.", error);
     }];
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 
@@ -418,8 +443,8 @@
 							  userName, @"userEmail",
 							  passWord, @"password",
 							  @"c", @"_DIR",
-							  @"iOS Client", @"_CNAME",
-							  @"DC6AE040A9200D384D4F08C0360A2607", @"_CPASS",
+							  [NSString stringWithUTF8String:CNAME], @"_CNAME",
+							  [NSString stringWithUTF8String:CPASS], @"_CPASS",
 							  nil] autorelease];
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:myURL];
     [httpClient setDefaultHeader:@"User-Agent" value:@"MAPI Client 1"];
@@ -638,14 +663,16 @@
          NSLog(@"Error while request on login: %@", error);
 		 NSLog(@"Error respons: %@", [[[NSString alloc] initWithData:[operation responseData] encoding:NSUTF8StringEncoding] autorelease]);
          
-         [[[[UIAlertView alloc] initWithTitle:@"Galat"
-                                      message:@"Periksa kembali dan pastikan nama pengguna dan password diisikan dengan benar."
+         [[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
+                                      message:NSLocalizedString(@"Login Failed Message", nil)
                                      delegate:nil
                             cancelButtonTitle:@"OK"
                             otherButtonTitles:nil] autorelease] show];
      }];
     
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 	
 }
@@ -661,7 +688,7 @@
 	email=@"";
 	}
 	
-	NSString* escapedUrl = [[NSString stringWithFormat:@"http://118.98.31.135:8000/mapi/authentication/user/facebook/m?validationId=%@&email=%@&_DIR=c&_CNAME=iOS Client&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_method=POST",userId,email]
+	NSString* escapedUrl = [[NSString stringWithFormat:@"%@authentication/user/facebook/m?validationId=%@&email=%@&_DIR=c&_CNAME=%@&_CPASS=%@&_method=POST",[NSString stringWithUTF8String:MAPI_SERVER],userId,email,[NSString stringWithUTF8String:CNAME], [NSString stringWithUTF8String:CPASS]]
 							stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 	NSLog(@"escapedUrl--->%@",escapedUrl);
 	 NSURL * myURL = [self smartURLForString:escapedUrl];
@@ -882,14 +909,16 @@
          NSLog(@"Error while request on login: %@", error);
 		 NSLog(@"Error respons: %@", [[[NSString alloc] initWithData:[operation responseData] encoding:NSUTF8StringEncoding] autorelease]);
          
-         [[[[UIAlertView alloc] initWithTitle:@"Galat"
-                                      message:@"Periksa kembali dan pastikan nama pengguna dan password diisikan dengan benar."
+         [[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
+                                      message:NSLocalizedString(@"Login Failed Message", nil)
                                      delegate:nil
                             cancelButtonTitle:@"OK"
                             otherButtonTitles:nil] autorelease] show];
      }];
     
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 
     
@@ -1001,7 +1030,8 @@
 	self.arForTable=[[NSMutableArray alloc] init];
 	[self.arForTable addObjectsFromArray:self.arrayOriginal];
 	
-	
+    //open left menu
+	[self openAllMenu];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -1185,6 +1215,49 @@
 	
 	
 }
+
+-(void)openAllMenu{
+    NSLog(@"OPEN ALL MENU");
+    
+    for(int i=0; i < [self.arForTable count];i++) {
+        NSDictionary *d=[self.arForTable objectAtIndex:i];
+        
+        
+        if([d valueForKey:@"Object"]) {
+            NSArray *ar=[d valueForKey:@"Object"];
+            
+            BOOL isAlreadyInserted=NO;
+            
+            for(NSDictionary *dInner in ar ){
+                NSInteger index=[self.arForTable indexOfObjectIdenticalTo:dInner];
+                
+                isAlreadyInserted=(index>0 && index!=NSIntegerMax);
+                if(isAlreadyInserted) break;
+                
+                
+            }
+            
+            if(isAlreadyInserted) {
+                [self miniMizeThisRows:ar];
+            } else {
+                NSLog(@"123");
+                NSUInteger count=i+1;
+                NSMutableArray *arCells=[NSMutableArray array];
+                for(NSDictionary *dInner in ar ) {
+                    [arCells addObject:[NSIndexPath indexPathForRow:count inSection:0]];
+                    
+                    [self.arForTable insertObject:dInner atIndex:count++];
+                    
+                }
+                [MelonListLeft insertRowsAtIndexPaths:arCells withRowAnimation:UITableViewRowAnimationLeft];
+                MelonListLeft.tag=[arCells objectAtIndex:0];
+                
+                
+            }
+        }
+    }
+}
+
 -(void)miniMizeThisRows:(NSArray*)ar{
 	NSLog(@"ar-->%@",ar);
 	for(NSDictionary *dInner in ar ) {
@@ -1210,7 +1283,7 @@
 	NSMutableArray *dataPass=[[NSMutableArray alloc]init];
 	
 	
-	if([sender isEqualToString:@"Service List"])
+	if([sender isEqualToString:NSLocalizedString(@"Service List", nil)])
 	{
 		[dataPass addObject:@"mokletdevServiceController"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
@@ -1221,7 +1294,7 @@
 		NSLog(@"1");
 	}
 	
-    else if([sender isEqualToString:@"Download History"])
+    else if([sender isEqualToString:NSLocalizedString(@"Download History", nil)])
 	{
 		[dataPass addObject:@"mokletdevHistoryController"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
@@ -1232,7 +1305,7 @@
 		NSLog(@"2");
 	}
 	
-    else if([sender isEqualToString:@"Download Queue"])
+    else if([sender isEqualToString:NSLocalizedString(@"Download Queue",nil)])
 	{
 		[dataPass addObject:@"downloadQueueViewController"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
@@ -1243,7 +1316,7 @@
 		NSLog(@"3");
 	}
 	
-    else if([sender isEqualToString:@"Playlist"])
+    else if([sender isEqualToString:NSLocalizedString(@"Playlist",nil)])
 	{
 		[dataPass addObject:@"mokletdevPlayList"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
@@ -1254,7 +1327,7 @@
 		NSLog(@"4");
 	}
 	
-    else if([sender isEqualToString:@"All Song"])
+    else if([sender isEqualToString:NSLocalizedString(@"All Song",nil)])
 	{
 		[dataPass addObject:@"mokletdevAllSong"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
@@ -1280,7 +1353,7 @@
     // Dispose of any resources that can be recreated.
 }
 -(void)viewWillDisappear:(BOOL)animated{
-	NSLog(@"123");
+	NSLog(@"123 viewWillDisappear");
 	[self didReceiveMemoryWarning];
 }
 

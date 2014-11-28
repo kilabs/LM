@@ -11,7 +11,7 @@
 			<array>
 				<dict>
 					<key>name</key>
-					<string>Service List</string>
+					<string>Daftar Layananku</string>
 					<key>level</key>
 					<string>1</string>
 					<key>controller</key>
@@ -23,7 +23,7 @@
 					<key>tag</key>
 					<string>12</string>
 					<key>name</key>
-					<string>Download History</string>
+					<string>Histori Download</string>
 					<key>level</key>
 					<string>1</string>
 				</dict>
@@ -31,13 +31,13 @@
 					<key>tag</key>
 					<string>13</string>
 					<key>name</key>
-					<string>Download Queue</string>
+					<string>Antrian Download</string>
 					<key>level</key>
 					<string>1</string>
 				</dict>
 			</array>
 			<key>name</key>
-			<string>My Profile</string>
+			<string>Profilku</string>
 			<key>level</key>
 			<integer>0</integer>
 			<key>img</key>
@@ -60,13 +60,13 @@
 					<key>tag</key>
 					<string>22</string>
 					<key>name</key>
-					<string>All Song</string>
+					<string>Semua Lagu</string>
 					<key>level</key>
 					<string>1</string>
 				</dict>
 			</array>
 			<key>name</key>
-			<string>My MelOn</string>
+			<string>LangitMusikku</string>
 			<key>level</key>
 			<string>0</string>
 			<key>img</key>

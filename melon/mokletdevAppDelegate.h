@@ -36,6 +36,11 @@
 #import "mokletdevPlayerViewController.h"
 //#import "UserBrief.h"
 
+#import "GAI.h"
+#import "GAIFields.h"
+#import "GAITracker.h"
+#import "GAIDictionaryBuilder.h"
+
 //@class UserBrief;
 @class songListObject;
 @class songDownloader;
@@ -94,5 +99,8 @@
 @property (nonatomic) BOOL                      isGetLayanan;
 
 - (void) ambilLayanan: (NSString *) userId;
+
+//google analytics
+@property(nonatomic, strong) id<GAITracker> tracker;
 
 @end

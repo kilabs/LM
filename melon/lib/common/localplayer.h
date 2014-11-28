@@ -19,6 +19,7 @@
 - (void) stop;
 - (void) pause;
 - (void) setVolume:(float)level;
+- (float) getVolume;
 - (void) play;
 - (void)destroyStreamer;
 - (NSString *) songnow;

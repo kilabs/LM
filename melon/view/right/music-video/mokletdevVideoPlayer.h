@@ -14,10 +14,11 @@
 #import <MessageUI/MessageUI.h>
 #import "MelonVideoPlayerViewController.h"
 #import "TJSpinner.h"
+#import "GAITrackedViewController.h"
 @class MelonPlayer;
 @class StreamingBrief;
 
-@interface mokletdevVideoPlayer : UIViewController<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate,MFMailComposeViewControllerDelegate>
+@interface mokletdevVideoPlayer : GAITrackedViewController<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate,MFMailComposeViewControllerDelegate>
 {
 	UITableView *MelonListVideo;
 	

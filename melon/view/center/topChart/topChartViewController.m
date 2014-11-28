@@ -11,6 +11,7 @@
 
 #import "AFNetworking.h"
 #import "songListObject.h"
+#import "PageCacheList.h"
 #import <Twitter/Twitter.h>
 #import <social/Social.h>
 #import <accounts/Accounts.h>
@@ -27,6 +28,8 @@
 #import "songListObject.h"
 #import "netracell_.h"
 #import "PlaylistBrief.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
+
 @interface topChartViewController ()
 
 @property (nonatomic, readonly) NSManagedObjectContext *managedObjectContex;
@@ -53,7 +56,7 @@ int selectedResultIndex;
 		
 		spinnerss = [[TJSpinner alloc] initWithSpinnerType:kTJSpinnerTypeActivityIndicator];
 		spinnerss.hidesWhenStopped = YES;
-		[spinnerss setColor:[UIColor colorWithRed:0.478 green:0.651 blue:0.176 alpha:1]];
+		[spinnerss setColor:[UIColor colorWithRed:COLORWITHRED green:COLORWITHGREEN blue:COLORWITHBLUE alpha:1]];
 		[spinnerss setInnerRadius:10];
 		[spinnerss setOuterRadius:20];
 		[spinnerss setStrokeWidth:8];
@@ -122,7 +125,7 @@ int selectedResultIndex;
 		top_label.backgroundColor=[UIColor clearColor];
 		
 		TitleBig=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 230, 44)];
-		TitleBig.text=@"Top Chart";
+		TitleBig.text=NSLocalizedString(@"Top Chart", nil);
 		TitleBig.textAlignment=NSTextAlignmentCenter;
 		TitleBig.backgroundColor=[UIColor clearColor];
 		[TitleBig setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -180,8 +183,8 @@ int selectedResultIndex;
 	//songListObject *dataObject=[self.netraMutableArray objectAtIndex:i];
     songListObject *dataObject=[self.netraMutableArray objectAtIndex:i];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via MelOn for IOS", dataObject.songName, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via LangitMusik for IOS", dataObject.songName, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
 	
 	if([SLComposeViewController isAvailableForServiceType:SLServiceTypeFacebook]) {
@@ -225,8 +228,8 @@ int selectedResultIndex;
 	//songListObject *dataObject=[self.netraMutableArray objectAtIndex:i];
     songListObject *dataObject=[self.netraMutableArray objectAtIndex:i];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *twitContent=[NSString stringWithFormat:@"#MelOnPlaying %@ by %@ %@ via MelOn for IOS", dataObject.songName, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *twitContent=[NSString stringWithFormat:@"#LangitMusik %@ by %@ %@ via LangitMusik for IOS", dataObject.songName, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
     Class TWTweetClass = NSClassFromString(@"TWTweetComposeViewController");
     if (TWTweetClass != nil)
@@ -260,11 +263,47 @@ int selectedResultIndex;
         //TODO: Add a twitter composer fallback
     }
 }
+
+-(void)loadCacheData{
+    //check store data
+    NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+    PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"top_100" inContext:localContext];
+    if (cache){
+            
+        //clear song data
+        [self.netraMutableArray removeAllObjects];
+		[tableChart reloadData];
+        
+        //NSLog(@"LOAD CACHE %@", cache.cacheData);
+        
+        currentSongId = @"0";
+		for(id netraDictionary in [cache.cacheData objectForKey:@"dataList"]){
+            songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
+			if (![self.netraMutableArray containsObject:songListObjectData]) {
+                [self.netraMutableArray addObject:songListObjectData];
+				
+            }
+			[songListObjectData release];
+		}
+        
+        //NSLog(@"LOAD CACHE AFTER %@", self.netraMutableArray);
+        
+        [self removeHud];
+        [self reloadData];
+        
+    }
+}
+
 -(void)fetchChart{
+    
 	[self showHud];
 	tableChart.hidden=YES;
-	//NSString *baseUrl=[NSString stringWithFormat:@"http://118.98.31.135:8000/mapi/songs/new?offset=%d&limit=10",current_page];
-	NSString *baseUrl=[NSString stringWithFormat:@"http://118.98.31.135:8000/mapi/chart/daily"];
+    
+    //load cache first
+    [self loadCacheData];
+    
+	//NSString *baseUrl=[NSString stringWithFormat:@"%@songs/new?offset=%d&limit=10",[NSString stringWithUTF8String:MAPI_SERVER], current_page];
+	NSString *baseUrl=[NSString stringWithFormat:@"%@chart/daily",[NSString stringWithUTF8String:MAPI_SERVER]];
 	
 	NSURL *URL=[NSURL URLWithString:baseUrl];
 	//NSMutableURLRequest *request=[[NSMutableURLRequest alloc] initWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60];
@@ -284,25 +323,46 @@ int selectedResultIndex;
 		//total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
 		//NSLog(@"responseObject--.%@",[responseObject description]);
         
-        currentSongId = @"0";
-		for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
-			//songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
-            songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
-			if (![self.netraMutableArray containsObject:songListObjectData]) {
-                [self.netraMutableArray addObject:songListObjectData];
-				
+        //check store data
+        NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+        PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"top_100" inContext:localContext];
+        if (!cache){
+            currentSongId = @"0";
+            for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
+                //songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
+                songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
+                if (![self.netraMutableArray containsObject:songListObjectData]) {
+                    [self.netraMutableArray addObject:songListObjectData];
+                    
+                }
+                [songListObjectData release];
             }
-			[songListObjectData release];
-		}
-		[self performSelector:@selector(reloadData) withObject:nil afterDelay:5];
-		
-		
+            
+            [self performSelector:@selector(reloadData) withObject:nil afterDelay:5];
+        }
+        
+        NSDictionary *responseJSON = [[NSDictionary alloc] initWithDictionary:responseObject];
+        
+        if(responseJSON.count > 0){
+            NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+            PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"top_100" inContext:localContext];
+            if (cache) {
+                cache.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+            }
+            else {
+                //save to local db
+                PageCacheList *local = [PageCacheList MR_createInContext:localContext];
+                local.pageType = @"top_100";
+                local.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+            }
+            [localContext MR_save];
+        }
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
             slowConnectionView.hidden = YES;
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Terjadi masalah ketika mengambil data dari server. Pastikan koneksi jaringan Anda dan coba kembali lagi."
 										 image:[UIImage imageNamed:@"dropdown-alert"]
 									  animated:YES
@@ -312,7 +372,9 @@ int selectedResultIndex;
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
 	[operation release];
     
     //currTableContentType = NEWRELEASE;
@@ -372,8 +434,11 @@ int selectedResultIndex;
 	cell.play.tag=indexPath.row;
 	cell.download.tag=indexPath.row;
 	NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",dataObject.songId];
-	[cell.thumbnail setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
+    [cell.thumbnail setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
 	
 	cell.length.text=[NSString stringWithFormat:@"%d : %d", minutes,seconds];
 	
@@ -424,7 +489,7 @@ int selectedResultIndex;
 	}
 	else{
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:@"Silahkan login terlebih dahulu untuk dapat Memasukkan lagu dalam playlist."
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -438,7 +503,7 @@ int selectedResultIndex;
 	
 	NSMutableArray *users_active = [NSMutableArray arrayWithArray:[EUserBrief MR_findAllSortedBy:@"userId" ascending:YES]];
 	EUserBrief *user_now=[users_active objectAtIndex:0];
-	NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@/song?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&newSongId=%@&plasylitId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,playlistId,user_now.username,user_now.webPassword,songId,playlistId];
+	NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@/song?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&newSongId=%@&plasylitId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,playlistId,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS],user_now.username,user_now.webPassword,songId,playlistId];
 	NSURL *URL=[NSURL URLWithString:sURL];
 	NSString *properlyEscapedURL = [sURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:URL];
@@ -462,7 +527,7 @@ int selectedResultIndex;
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:gagal
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -470,7 +535,9 @@ int selectedResultIndex;
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 	
 	
@@ -478,7 +545,7 @@ int selectedResultIndex;
 -(void)loadPlaylist:(NSString*)userId pass:(NSString*)pass username:(NSString *)username{
 	[self.netraMutableArrayPlaylist removeAllObjects];
 	
-    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@&offset=0&limit=100", [NSString stringWithUTF8String:MAPI_SERVER], userId,username,pass];
+    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@&offset=0&limit=100", [NSString stringWithUTF8String:MAPI_SERVER], userId,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS],username,pass];
 	NSURL *URL=[NSURL URLWithString:sURL];
 	NSString *properlyEscapedURL = [sURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:URL];
@@ -512,7 +579,9 @@ int selectedResultIndex;
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
@@ -796,6 +865,8 @@ int selectedResultIndex;
     selectedResultIndex = 0;
     
     [self installNotification];
+    
+    [self fetchChart];
 	
 }
 
@@ -808,10 +879,12 @@ int selectedResultIndex;
 {
     [super viewDidLoad];
     
-	[self fetchChart];
     top_label.hidden = NO;
 	TitleBig.hidden=NO;
 	// Do any additional setup after loading the view.
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Top Chart", nil);
 }
 
 -(void)lefbuttonPush{
@@ -862,8 +935,8 @@ int selectedResultIndex;
                 if ([eLayanan.paymentProdName isEqualToString:@""])
                 {
                     [YRDropdownView showDropdownInView:self.view
-                                                 title:@"Galat"
-                                                detail:@"Pengambilan lagu tak bisa dilakukan. Periksa kembali produk MelOn Anda. Pastikan Anda mempunyai paket yang betul."
+                                                 title:NSLocalizedString(@"Error", nill)
+                                                detail:@"Pengambilan lagu tak bisa dilakukan. Periksa kembali produk LangitMusik Anda. Pastikan Anda mempunyai paket yang betul."
                                                  image:[UIImage imageNamed:@"dropdown-alert_error"]
                      //backgroundImage:[UIImage imageNamed:@"allow"]
                                               animated:YES
@@ -909,7 +982,7 @@ int selectedResultIndex;
 			}
 			else{
 				[YRDropdownView showDropdownInView:self.view
-											 title:@"Galat"
+											 title:NSLocalizedString(@"Error", nill)
 											detail:@"Musik Sudah Di tambahkan ke Antrian"
 											 image:[UIImage imageNamed:@"dropdown-alert_warning"]
 								   backgroundImage:[UIImage imageNamed:@"warning"]
@@ -920,7 +993,7 @@ int selectedResultIndex;
 		}
 		else{
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Musik Sudah ada di Handset Anda"
 										 image:[UIImage imageNamed:@"dropdown-alert_error"]
 									  animated:YES
@@ -930,7 +1003,7 @@ int selectedResultIndex;
 	}
 	else{
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:@"Silahkan login terlebih dahulu untuk dapat mengambil lagu."
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES

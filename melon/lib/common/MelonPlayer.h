@@ -10,6 +10,9 @@
 #import <AVFoundation/AVFoundation.h>
 #import <AVFoundation/AVAudioSession.h>
 
+#import <CoreTelephony/CTCallCenter.h>
+#import <CoreTelephony/CTCall.h>
+
 @class NewSongs;
 @class StreamingBrief;
 @class AudioStreamer;
@@ -57,6 +60,8 @@
 - (void) setGettingNewSong: (NSNumber *) value;
 - (BOOL) periksaProdukBasi;
 - (void) periksaLagudanStream: (NSString *) songId;
+
+@property (nonatomic, strong) CTCallCenter* callCenter;
 
 
 @end

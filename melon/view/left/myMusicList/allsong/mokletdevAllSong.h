@@ -9,11 +9,12 @@
 #import <UIKit/UIKit.h>
 #import "ActionSheetPicker.h"
 #import "mokletdevPlayerViewController.h"
+#import "GAITrackedViewController.h"
 
 @class MelonPlayer;
 @class localplayer;
 @class AbstractActionSheetPicker;
-@interface mokletdevAllSong : UIViewController <UITableViewDelegate, UITableViewDataSource,UISearchBarDelegate,UISearchDisplayDelegate>
+@interface mokletdevAllSong : GAITrackedViewController <UITableViewDelegate, UITableViewDataSource,UISearchBarDelegate,UISearchDisplayDelegate>
 {
 	UITableView *AllSongTable;
     NSArray * AllSongList;
@@ -40,5 +41,7 @@
 @property(nonatomic,retain) NSMutableArray  * netraMutableArrayPlaylist;
 @property (nonatomic) CGFloat expandedCellHeight;
 @property (nonatomic, strong) UIImageView   * gTunggu;
+
+-(NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath;
 
 @end

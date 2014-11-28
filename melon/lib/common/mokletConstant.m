@@ -12,6 +12,7 @@
 NSString* const button_new_songs=@"new_song_on";
 NSString* const favourite=@"fav";
 NSString* const common_navbar=@"common-navbar";
+NSString* const common_navbar1=@"common-navbar1";
 NSString* const wrapper_grid=@"grid";
 NSString* const mokletNavbar=@"navbar";
 NSString* const mokletNavbarImage=@"logo";

@@ -121,6 +121,9 @@
         [eVideoPlayer play];
         NSLog(@"Play command telah dipanggil.");
     }
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Video Player", nil);
    
 }
 

@@ -21,6 +21,8 @@
     if (self) {
 		self.view.backgroundColor=[UIColor blackColor];
         // Custom initialization
+        
+        
     }
     return self;
 }
@@ -85,6 +87,9 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Tutorial", nil);
 }
 
 - (void)didReceiveMemoryWarning

@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 #import <MediaPlayer/MediaPlayer.h>
+#import "GAITrackedViewController.h"
 
-@interface MelonVideoPlayerViewController : UIViewController
+@interface MelonVideoPlayerViewController : GAITrackedViewController
 {
     UIButton                * backButton;
     MPMoviePlayerController * eVideoPlayer;

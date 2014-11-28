@@ -27,6 +27,7 @@
 
 @property (nonatomic, retain) UILabel     * txtLogin;
 @property (nonatomic, retain) UIButton    * btnLogin;
+@property (nonatomic, retain) UIButton    * btnRegister;
 @property (nonatomic, retain) UILabel     * txtUserName;
 @property (nonatomic, retain) UITextField * inputUsername;
 @property (nonatomic, retain) UILabel     * txtPassword;

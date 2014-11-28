@@ -13,10 +13,11 @@
 #import "mokletdevSearchMusicController.h"
 #import <MessageUI/MessageUI.h>
 #import "TJSpinner.h"
+#import "GAITrackedViewController.h"
 @class MelonPlayer;
 @class StreamingBrief;
 
-@interface mokletdevHistoryController : UIViewController<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>{
+@interface mokletdevHistoryController : GAITrackedViewController<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>{
 
 	UITableView *downloadHistory;
 	NSInteger current_page_;

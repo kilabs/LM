@@ -7,28 +7,55 @@
 //
 
 #import "mokletdevSearchMusicController.h"
+#import "MusicListControllerByAlbum.h"
+#import "AlbumListControllerByArtist.h"
 #import "AFNetworking.h"
 #import "songListObject.h"
+#import "albumListObject.h"
+#import "artistListObject.h"
 #import "SearchCell.h"
+#import "SearchCellSong.h"
 #import "MelonPlayer.h"
 #import "mokletdevAppDelegate.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
+#import "songDownloader.h"
+#import "YRDropdownView.h"
+#import "DownloadList.h"
 
 #import "localplayer.h"
 #import "LocalPlaylist.h"
 #import "LocalPlaylist1.h"
 #import "EUserBrief.h"
+#import "GlobalDefine.h"
 @interface mokletdevSearchMusicController (){
- songListObject * currentSong;
+    songListObject * currentSong;
+    albumListObject * currentAlbum;
+    songDownloader * _songDownloader;
 }
 
 @end
 
 @implementation mokletdevSearchMusicController
-const int kLoadingCellTag2 = 1273;
+static const int kLoadingCellTag2 = 1273;
 
 @synthesize gTunggu = _gTunggu;
+@synthesize HeaderTitle;
+@synthesize HeaderTitleAlbum;
+@synthesize HeaderTitleArtist;
+@synthesize scrollView;
 
 int selectedResultIndex;
+
+int songTableHeight = 0, albumTableHeight = 0, artistTableHeight = 0;
+
+static int SONG_ROW_HEIGHT = 75;
+static int ALBUM_ROW_HEIGHT = 75;
+static int ARTIST_ROW_HEIGHT = 75;
+static int HEADER_TITLE_HEIGHT = 30;
+
+static int RECORD_LIMIT = 10;
+
+NSOperationQueue *operationQueueSong, *operationQueueAlbum, *operationQueueArtist;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -37,13 +64,38 @@ int selectedResultIndex;
         // Custom initialization
 		//self.title=@"Search Song";
 		self.view.backgroundColor=[UIColor whiteColor];
-		searchResult=[[UITableView alloc]initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height-44)];
+        
+        songTableHeight = albumTableHeight = artistTableHeight = HEADER_TITLE_HEIGHT;
+        
+        //init scrollview
+        scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 50, self.view.frame.size.width, self.view.frame.size.height)];
+        scrollView.backgroundColor=[UIColor colorWithRed:0.957 green:0.957 blue:0.957 alpha:1];
+        
+        //init song tableview
+		searchResult=[[UITableView alloc]initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height-94)];
 		searchResult.delegate=self;
 		searchResult.tableFooterView = [[[UIView alloc] init] autorelease];
 		searchResult.backgroundColor=[UIColor colorWithRed:0.957 green:0.957 blue:0.957 alpha:1];
 		searchResult.dataSource=self;
 		searchResult.separatorColor=[UIColor colorWithRed:0.878 green:0.878 blue:0.878 alpha:1];
+        
+        //init album tableview
+        searchResultAlbum=[[UITableView alloc]initWithFrame:CGRectMake(0, 35, self.view.bounds.size.width, self.view.bounds.size.height-94)];
+		searchResultAlbum.delegate=self;
+		searchResultAlbum.tableFooterView = [[[UIView alloc] init] autorelease];
+		searchResultAlbum.backgroundColor=[UIColor colorWithRed:0.957 green:0.957 blue:0.957 alpha:1];
+		searchResultAlbum.dataSource=self;
+		searchResultAlbum.separatorColor=[UIColor colorWithRed:0.878 green:0.878 blue:0.878 alpha:1];
+        
+        //init artist tableview
+        searchResultArtist=[[UITableView alloc]initWithFrame:CGRectMake(0, 70, self.view.bounds.size.width, self.view.bounds.size.height-94)];
+		searchResultArtist.delegate=self;
+		searchResultArtist.tableFooterView = [[[UIView alloc] init] autorelease];
+		searchResultArtist.backgroundColor=[UIColor colorWithRed:0.957 green:0.957 blue:0.957 alpha:1];
+		searchResultArtist.dataSource=self;
+		searchResultArtist.separatorColor=[UIColor colorWithRed:0.878 green:0.878 blue:0.878 alpha:1];
 		
+        //init search form
 		searchbarContainer=[[UIView alloc]initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 50)];
 		searchbarContainer.backgroundColor=[UIColor colorWithPatternImage:[UIImage imageNamed:@"searchbar"]];
 		UIView *paddingView = [[[UIView alloc] initWithFrame:CGRectMake(40, 0, 5, 20)] autorelease];
@@ -53,7 +105,7 @@ int selectedResultIndex;
 		searchForm.layer.sublayerTransform = CATransform3DMakeTranslation(5, 3, 0);
 		searchForm.leftViewMode = UITextFieldViewModeAlways;
 		searchForm.leftView = paddingView;
-		searchForm.placeholder=@"Search Song";
+		searchForm.placeholder=NSLocalizedString(@"Search Song", nil);
 		searchForm.delegate=self;
 		searchForm.clearButtonMode = UITextFieldViewModeWhileEditing;
 		
@@ -69,12 +121,54 @@ int selectedResultIndex;
 		
 		//[searchBar setBackgroundImage:[UIImage new]];
 		//[searchBar setTranslucent:YES];
+        
+        [self.view addSubview:searchbarContainer];
+        
+        //header title song
+        HeaderTitle=[[UIBorderLabel alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, HEADER_TITLE_HEIGHT)];
+        HeaderTitle.backgroundColor = [UIColor colorWithPatternImage: [UIImage imageNamed: @"common-navbar1"]];//[UIColor colorWithRed:236.0/255 green:9.0/255 blue:142.0/255 alpha:1];
+        HeaderTitle.textColor=[UIColor whiteColor];
+        HeaderTitle.text = NSLocalizedString(@"Song", nil);
+        [HeaderTitle setFont:[UIFont fontWithName:@"Arial-BoldMT" size:15]];
+        
+        HeaderTitle.topInset = 10;
+        HeaderTitle.leftInset = 15;
+        HeaderTitle.bottomInset = 10;
+        HeaderTitle.rightInset = 15;
+        
+        //header album title
+        HeaderTitleAlbum=[[UIBorderLabel alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, HEADER_TITLE_HEIGHT)];
+        HeaderTitleAlbum.backgroundColor = [UIColor colorWithPatternImage: [UIImage imageNamed: @"common-navbar1"]];//[UIColor colorWithRed:236.0/255 green:9.0/255 blue:142.0/255 alpha:1];
+        HeaderTitleAlbum.textColor=[UIColor whiteColor];
+        HeaderTitleAlbum.text = NSLocalizedString(@"Album", nil);
+        [HeaderTitleAlbum setFont:[UIFont fontWithName:@"Arial-BoldMT" size:15]];
+        
+        HeaderTitleAlbum.topInset = 10;
+        HeaderTitleAlbum.leftInset = 15;
+        HeaderTitleAlbum.bottomInset = 10;
+        HeaderTitleAlbum.rightInset = 15;
+        
+        //header artist title
+        HeaderTitleArtist=[[UIBorderLabel alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, HEADER_TITLE_HEIGHT)];
+        HeaderTitleArtist.backgroundColor = [UIColor colorWithPatternImage: [UIImage imageNamed: @"common-navbar1"]];//[UIColor colorWithRed:236.0/255 green:9.0/255 blue:142.0/255 alpha:1];
+        HeaderTitleArtist.textColor=[UIColor whiteColor];
+        HeaderTitleArtist.text = NSLocalizedString(@"Artist", nil);
+        [HeaderTitleArtist setFont:[UIFont fontWithName:@"Arial-BoldMT" size:15]];
+        
+        HeaderTitleArtist.topInset = 10;
+        HeaderTitleArtist.leftInset = 15;
+        HeaderTitleArtist.bottomInset = 10;
+        HeaderTitleArtist.rightInset = 15;
 		
-		searchResult.tableHeaderView=searchbarContainer;
+		//searchResult.tableHeaderView=searchbarContainer;
+        searchResult.tableHeaderView=HeaderTitle;
+        searchResultAlbum.tableHeaderView=HeaderTitleAlbum;
+        searchResultArtist.tableHeaderView=HeaderTitleArtist;
+        
 		top_label=[[UIView alloc]initWithFrame:CGRectMake(40, 0, 186, 44)];
 		top_label.backgroundColor=[UIColor clearColor];
 		TitleBig=[[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 230, 44)] autorelease];
-		TitleBig.text=@"Search Song";
+		TitleBig.text=NSLocalizedString(@"Search Song", nil);
 		TitleBig.textAlignment=NSTextAlignmentCenter;
 		TitleBig.backgroundColor=[UIColor clearColor];
 		[TitleBig setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -83,6 +177,9 @@ int selectedResultIndex;
 		TitleBig.shadowOffset = CGSizeMake(0, 1.0);
 		
 		self.netraMutableArray=[[NSMutableArray alloc]init];
+        self.netraMutableAlbumArray=[[NSMutableArray alloc]init];
+        self.netraMutableArtistArray=[[NSMutableArray alloc]init];
+        
 		UIImage* image = [UIImage imageNamed:@"left"];
 		CGRect frame = CGRectMake(-5, 0, 44, 44);
 		UIButton* leftbutton = [[UIButton alloc] initWithFrame:frame];
@@ -133,7 +230,17 @@ int selectedResultIndex;
         
 		
     }
-	[self.view addSubview:searchResult];
+    
+    scrollView.contentSize = CGSizeMake(self.view.frame.size.width, self.view.frame.size.height);
+    [scrollView setShowsVerticalScrollIndicator:NO];
+    
+    [self.scrollView addSubview:searchResult];
+    [self.scrollView addSubview:searchResultAlbum];
+    [self.scrollView addSubview:searchResultArtist];
+    
+	[self.view addSubview:scrollView];
+    
+    [self hideSectionTitle];
 	
     return self;
 }
@@ -146,10 +253,17 @@ int selectedResultIndex;
 	//	[searchbar resignFirstResponder];
 	[self.sidePanelController showRightPanel:YES];
 }
+
+-(void)hideSectionTitle{
+    [HeaderTitle setHidden:YES];
+    [HeaderTitleAlbum setHidden:YES];
+    [HeaderTitleArtist setHidden:YES];
+}
+
 -(void)getSuggest:(NSString *)KeyWords{
 	//NSLog(@"called");
 	
-	NSString *baseUrl=[NSString stringWithFormat:@"http://118.98.31.135:8000/mapi/search/integration/song?keyword=%@&_DIR=c&_CNAME=iOS Client&_CPASS=DC6AE040A9200D384D4F08C0360A2607",KeyWords];
+	NSString *baseUrl=[NSString stringWithFormat:@"%@search/integration/song?keyword=%@&_DIR=c&_CNAME=%@&_CPASS=%@&offset=0&limit=%i",[NSString stringWithUTF8String:MAPI_SERVER],KeyWords,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS], RECORD_LIMIT];
 	NSString* escapedUrl = [baseUrl
 							stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 	
@@ -158,25 +272,82 @@ int selectedResultIndex;
 	NSLog(@"request-->%@",URL);
 	AFJSONRequestOperation *operation=[[AFJSONRequestOperation alloc] initWithRequest:request];
 	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
-		total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
-		for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
-			
-			songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
-			if (![self.netraMutableArray containsObject:songListObjectData]) {
-                [self.netraMutableArray addObject:songListObjectData];
-				
+        @try {
+            //clear song data
+            [self.netraMutableArray removeAllObjects];
+            [searchResult reloadData];
+            
+            total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
+            
+            int size =[[responseObject objectForKey:@"size"]intValue];
+            
+            if(size>0)
+                songTableHeight = (size*SONG_ROW_HEIGHT)+HEADER_TITLE_HEIGHT;
+            else
+                songTableHeight = HEADER_TITLE_HEIGHT;
+            
+            if(HeaderTitleAlbum.hidden==YES)
+                albumTableHeight -= HEADER_TITLE_HEIGHT;
+            
+            if(HeaderTitleArtist.hidden==YES)
+                artistTableHeight -= HEADER_TITLE_HEIGHT;
+            
+            if(albumTableHeight<0) albumTableHeight = 0;
+            if(artistTableHeight<0) artistTableHeight = 0;
+            
+            //set scrollview height
+            int totalHeight = songTableHeight + albumTableHeight + artistTableHeight;
+            
+            CGRect screenRect = [[UIScreen mainScreen] bounds];
+            
+            if(totalHeight < screenRect.size.height)
+                totalHeight = screenRect.size.height;
+            
+            NSLog(@"TOTAL HEIGHT SONG %i", totalHeight);
+            
+            scrollView.contentSize = CGSizeMake(self.view.frame.size.width, totalHeight+100);
+            
+            //set song table height
+            CGRect frame = searchResult.frame;
+            frame.size.height = songTableHeight;
+            searchResult.frame = frame;
+            
+            //set album table position
+            CGRect frame1 = searchResultAlbum.frame;
+            frame1.origin.y = songTableHeight + (HeaderTitle.hidden==NO?5:0);
+            searchResultAlbum.frame = frame1;
+            
+            //set artist table position
+            CGRect frame2 = searchResultArtist.frame;
+            frame2.origin.y = (albumTableHeight+songTableHeight+ (HeaderTitleAlbum.hidden==NO?5:0) ) + (HeaderTitleArtist.hidden==NO?5:0);
+            searchResultArtist.frame = frame2;
+            
+            for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
+                
+                songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
+                if (![self.netraMutableArray containsObject:songListObjectData]) {
+                    [self.netraMutableArray addObject:songListObjectData];
+                    
+                }
+                
+                [songListObjectData release];
             }
-			
-			[songListObjectData release];
+            
+            [HeaderTitle setHidden:YES];
+            if(size > 0){
+                [HeaderTitle setHidden:NO];
+            }
+            
+            //fetch=1;
+            //firstLoad=0;
+            //MelonList.hidden=NO;
+            //[self dismiss];
+            [searchResult setHidden:NO];
+            [searchResult reloadData];
 		}
-		
-		//fetch=1;
-		//firstLoad=0;
-		//MelonList.hidden=NO;
-		//[self dismiss];
-		[searchResult setHidden:NO];
-		[searchResult reloadData];
-		
+        @catch (NSException *exception) {
+            NSLog(@"error album load %@", exception);
+        }
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
@@ -185,7 +356,229 @@ int selectedResultIndex;
 		}
 		
 	}];
-	[operation start];
+	//[operation start];
+    if(operationQueueSong==nil)
+        operationQueueSong = [[NSOperationQueue alloc] init];
+    
+    [operationQueueSong cancelAllOperations];
+    [operationQueueSong addOperation:operation];
+	[operation release];
+	
+}
+
+-(void)getSuggestAlbum:(NSString *)KeyWords{
+	
+	NSString *baseUrl=[NSString stringWithFormat:@"%@search/integration/album?keyword=%@&_DIR=c&_CNAME=%@&_CPASS=%@&offset=0&limit=%i",[NSString stringWithUTF8String:MAPI_SERVER],KeyWords,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS], RECORD_LIMIT];
+	NSString* escapedUrl = [baseUrl
+							stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+	
+	NSURL *URL=[NSURL URLWithString:escapedUrl];
+	NSMutableURLRequest *request=[[NSMutableURLRequest alloc] initWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60];
+	NSLog(@"request-->%@",URL);
+	AFJSONRequestOperation *operation=[[AFJSONRequestOperation alloc] initWithRequest:request];
+	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        @try {
+            //clear album data
+            [self.netraMutableAlbumArray removeAllObjects];
+            [searchResultAlbum reloadData];
+            
+            NSLog(@"RESPONSE %@", responseObject);
+            
+            total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
+            
+            int size =[[responseObject objectForKey:@"size"]intValue];
+            
+            if(size>0)
+                albumTableHeight = (size*ALBUM_ROW_HEIGHT)+HEADER_TITLE_HEIGHT;
+            else
+                albumTableHeight = HEADER_TITLE_HEIGHT;
+            
+            if(HeaderTitle.hidden==YES)
+                songTableHeight -= HEADER_TITLE_HEIGHT;
+            
+            if(HeaderTitleArtist.hidden==YES)
+                artistTableHeight -= HEADER_TITLE_HEIGHT;
+            
+            if(songTableHeight<0) songTableHeight = 0;
+            if(artistTableHeight<0) artistTableHeight = 0;
+            
+            //set scrollview height
+            int totalHeight = songTableHeight + albumTableHeight + artistTableHeight;
+            
+            CGRect screenRect = [[UIScreen mainScreen] bounds];
+            
+            if(totalHeight < screenRect.size.height)
+                totalHeight = screenRect.size.height;
+            
+            NSLog(@"TOTAL HEIGHT ALBUM %i", totalHeight);
+            
+            scrollView.contentSize = CGSizeMake(self.view.frame.size.width, totalHeight+100);
+            
+            //set album table height
+            CGRect frame = searchResultAlbum.frame;
+            frame.size.height = albumTableHeight;
+            searchResultAlbum.frame = frame;
+            
+            //set album table position
+            CGRect frame1 = searchResultAlbum.frame;
+            frame1.origin.y = songTableHeight + (HeaderTitle.hidden==NO?5:0);
+            searchResultAlbum.frame = frame1;
+            
+            //set artist table position
+            CGRect frame2 = searchResultArtist.frame;
+            frame2.origin.y = (albumTableHeight+songTableHeight+ (HeaderTitleArtist.hidden==NO?5:0) ) + (HeaderTitle.hidden==NO?5:0);
+            searchResultArtist.frame = frame2;
+            
+            for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
+                
+                albumListObject *albumListObjectData=[[albumListObject alloc] initWithDictionary:netraDictionary];
+                if (![self.netraMutableAlbumArray containsObject:albumListObjectData]) {
+                    [self.netraMutableAlbumArray addObject:albumListObjectData];
+                    
+                }
+                
+                [albumListObjectData release];
+            }
+            
+            [HeaderTitleAlbum setHidden:YES];
+            if(size > 0){
+                [HeaderTitleAlbum setHidden:NO];
+            }
+            
+            //fetch=1;
+            //firstLoad=0;
+            //MelonList.hidden=NO;
+            //[self dismiss];
+            [searchResultAlbum setHidden:NO];
+            [searchResultAlbum reloadData];
+        }
+        @catch (NSException *exception) {
+            NSLog(@"error album load %@", exception);
+        }
+        
+		
+		
+	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+		if(error){
+			
+			[searchResultAlbum setHidden:YES];
+		}
+		
+	}];
+	//[operation start];
+    if(operationQueueAlbum==nil)
+        operationQueueAlbum = [[NSOperationQueue alloc] init];
+    
+    [operationQueueAlbum cancelAllOperations];
+    [operationQueueAlbum addOperation:operation];
+	[operation release];
+	
+}
+
+-(void)getSuggestArtist:(NSString *)KeyWords{
+	
+	NSString *baseUrl=[NSString stringWithFormat:@"%@search/integration/artist?keyword=%@&_DIR=c&_CNAME=%@&_CPASS=%@&offset=0&limit=%i",[NSString stringWithUTF8String:MAPI_SERVER],KeyWords,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS], RECORD_LIMIT];
+	NSString* escapedUrl = [baseUrl
+							stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+	
+	NSURL *URL=[NSURL URLWithString:escapedUrl];
+	NSMutableURLRequest *request=[[NSMutableURLRequest alloc] initWithURL:URL cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60];
+	NSLog(@"request-->%@",URL);
+	AFJSONRequestOperation *operation=[[AFJSONRequestOperation alloc] initWithRequest:request];
+	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        @try {
+            //clear artist data
+            [self.netraMutableArtistArray removeAllObjects];
+            [searchResultArtist reloadData];
+            
+            NSLog(@"RESPONSE %@", responseObject);
+            
+            total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
+            
+            int size =[[responseObject objectForKey:@"size"]intValue];
+            
+            if(size>0)
+                artistTableHeight = (size*ARTIST_ROW_HEIGHT)+HEADER_TITLE_HEIGHT;
+            else
+                artistTableHeight = HEADER_TITLE_HEIGHT;
+            
+            if(HeaderTitle.hidden==YES)
+                songTableHeight -= HEADER_TITLE_HEIGHT;
+            
+            if(HeaderTitleAlbum.hidden==YES)
+                albumTableHeight -= HEADER_TITLE_HEIGHT;
+            
+            if(songTableHeight<0) songTableHeight = 0;
+            if(albumTableHeight<0) albumTableHeight = 0;
+            
+            //set scrollview height
+            int totalHeight = songTableHeight + albumTableHeight + artistTableHeight;
+            
+            CGRect screenRect = [[UIScreen mainScreen] bounds];
+            
+            if(totalHeight < screenRect.size.height)
+                totalHeight = screenRect.size.height;
+            
+            NSLog(@"TOTAL HEIGHT ARTIST %i", totalHeight);
+            
+            scrollView.contentSize = CGSizeMake(self.view.frame.size.width, totalHeight+100);
+            
+            //set album table height
+            CGRect frame = searchResultArtist.frame;
+            frame.size.height = artistTableHeight;
+            searchResultArtist.frame = frame;
+            
+            //set album table position
+            CGRect frame1 = searchResultAlbum.frame;
+            frame1.origin.y = songTableHeight + (HeaderTitle.hidden==NO?5:0);
+            searchResultAlbum.frame = frame1;
+            
+            //set artist table position
+            CGRect frame2 = searchResultArtist.frame;
+            frame2.origin.y = (albumTableHeight+songTableHeight+ (HeaderTitleAlbum.hidden==NO?5:0) )+ (HeaderTitle.hidden==NO?5:0);
+            searchResultArtist.frame = frame2;
+            
+            for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
+                
+                artistListObject *artistListObjectData=[[artistListObject alloc] initWithDictionary:netraDictionary];
+                if (![self.netraMutableArtistArray containsObject:artistListObjectData]) {
+                    [self.netraMutableArtistArray addObject:artistListObjectData];
+                    
+                }
+                
+                [artistListObjectData release];
+            }
+            
+            [HeaderTitleArtist setHidden:YES];
+            if(size > 0){
+                [HeaderTitleArtist setHidden:NO];
+            }
+            
+            //fetch=1;
+            //firstLoad=0;
+            //MelonList.hidden=NO;
+            //[self dismiss];
+            [searchResultArtist setHidden:NO];
+            [searchResultArtist reloadData];
+        }
+        @catch (NSException *exception) {
+            NSLog(@"error artist load %@", exception);
+        }
+		
+		
+	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+		if(error){
+			
+			[searchResultArtist setHidden:YES];
+		}
+		
+	}];
+	//[operation start];
+    if(operationQueueArtist==nil)
+        operationQueueArtist = [[NSOperationQueue alloc] init];
+    
+    [operationQueueArtist cancelAllOperations];
+    [operationQueueArtist addOperation:operation];
 	[operation release];
 	
 }
@@ -212,28 +605,44 @@ int selectedResultIndex;
 	//self.title=@"music player";
 	//[self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"navbar_lain"] forBarMetrics:UIBarMetricsDefault];
 	//animated=YES;
-    
+    TitleBig.hidden=YES;
     [self uninstallNotification];
 }
 
 -(void)viewDidLoad{
 	[super viewDidLoad];
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Search Song", nil);
 	
 }
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
 	NSString *newString = [searchForm.text stringByReplacingCharactersInRange:range withString:string];
-	if(searchForm.text.length>1){
+    
+    if(newString.length <= 0)
+        [self hideSectionTitle];
+    
+    //minimal 3 character to search
+	//if(searchForm.text.length>1){
 		[self.netraMutableArray removeAllObjects];
+        [self.netraMutableAlbumArray removeAllObjects];
+        [self.netraMutableArtistArray removeAllObjects];
 		[self getSuggest:newString];
-	}
+        [self getSuggestAlbum:newString];
+        [self getSuggestArtist:newString];
+	//}
 	
 	NSRange textFieldRange = NSMakeRange(0, [textField.text length]);
     if (NSEqualRanges(range, textFieldRange) && [string length] == 0) {
 		
 		[self.netraMutableArray removeAllObjects];
+        [self.netraMutableAlbumArray removeAllObjects];
+        [self.netraMutableArtistArray removeAllObjects];
 		//[[self loadingCell] removeFromSuperview];
 		[searchResult reloadData];
+        [searchResultAlbum reloadData];
+        [searchResultArtist reloadData];
     }
 	return YES;
 }
@@ -252,8 +661,36 @@ int selectedResultIndex;
     return YES;
 }
 - (BOOL)textFieldShouldClear:(UITextField *)textField{
+    //clear song, album data
 	[self.netraMutableArray removeAllObjects];
 	[searchResult reloadData];
+    
+    [self.netraMutableAlbumArray removeAllObjects];
+	[searchResultAlbum reloadData];
+    
+    [self.netraMutableArtistArray removeAllObjects];
+	[searchResultArtist reloadData];
+    
+    //set song table height
+    CGRect frame = searchResult.frame;
+    frame.size.height = HEADER_TITLE_HEIGHT;
+    searchResult.frame = frame;
+    
+    CGRect frame1 = searchResultAlbum.frame;
+    frame1.size.height = HEADER_TITLE_HEIGHT;
+    frame1.origin.y = 35;
+    searchResultAlbum.frame = frame1;
+    
+    CGRect frame2 = searchResultArtist.frame;
+    frame1.size.height = HEADER_TITLE_HEIGHT;
+    frame1.origin.y = 70;
+    searchResultArtist.frame = frame1;
+    
+    [self hideSectionTitle];
+    
+    //scroll to top
+    [self.scrollView setContentOffset:CGPointZero animated:YES];
+    
 	return YES;
 }
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
@@ -274,127 +711,220 @@ int selectedResultIndex;
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-
-    return self.netraMutableArray.count;
-	
+    if(tableView == searchResult)
+        return self.netraMutableArray.count;
+    else if(tableView == searchResultAlbum)
+        return self.netraMutableAlbumArray.count;
+    else if(tableView == searchResultArtist)
+        return self.netraMutableArtistArray.count;
+	else
+        return 0;
 }
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    cell.backgroundColor = [UIColor colorWithRed:0.957 green:0.957 blue:0.957 alpha:1];
-	
-	if (cell.tag == kLoadingCellTag2) {
-		NSLog(@"kLoadingCellTag");
-		current_page+=10;
-		//[self fetchData];
-		
-		
-	}
+    
+    //if(tableView == searchResult) {
+        cell.backgroundColor = [UIColor colorWithRed:0.957 green:0.957 blue:0.957 alpha:1];
+        
+        if (cell.tag == kLoadingCellTag2) {
+            NSLog(@"kLoadingCellTag");
+            current_page+=10;
+            //[self fetchData];
+            
+            
+        }
+    //es}
 	
 }
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    NSLog(@"SELECT ROW");
     
-	TitleBig.hidden=NO;
-    selectedResultIndex = indexPath.row;
-	songListObject * songItem = [self.netraMutableArray objectAtIndex:indexPath.row];
-    if (songItem == nil)
-    {
-        return;
-    }
-    
-    mokletdevAppDelegate * appDelegate = (mokletdevAppDelegate *) [[UIApplication sharedApplication] delegate];
-    MPlayer = [MelonPlayer sharedInstance];
-    
-//    top_label.hidden=NO;
-//    players = [[mokletdevPlayerViewController alloc]init];
-//    players.sSongId     = songItem.songId;
-//    players.sSongTitle  = songItem.songName;
-//	players.sArtistId   = songItem.artistId;
-//    players.sArtistName = songItem.artistName;
-//	players.sAlbumId    = songItem.albumId;
-//    players.sAlbumName  = songItem.albumName;
-//	players.playTime    = songItem.playtime;
-//	UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:players];
-//	[self.navigationController presentModalViewController:navigationController animated:YES];
-//	[navigationController release];
-//	[players release];
-    
-    // check current playing song.
-    
-    if ([appDelegate.nowPlayingPlaylistDefault count] > 0)
-    {
-        LocalPlaylist1 * npSong = [[LocalPlaylist1 alloc] init];
-        npSong = (LocalPlaylist1 *) [appDelegate.nowPlayingPlaylistDefault objectAtIndex:appDelegate.nowPlayingSongIndex];
+    if(tableView == searchResult) {
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
         
-        NSLog(@"npSong.songId - songItem.songId : %@ - %@.", npSong.songId, songItem.songId);
-        if ([npSong.songId isEqualToString:songItem.songId])
+        TitleBig.hidden=NO;
+        selectedResultIndex = indexPath.row;
+        songListObject * songItem = [self.netraMutableArray objectAtIndex:indexPath.row];
+        if (songItem == nil)
         {
-            if ([MPlayer isPlaying])
+            return;
+        }
+        
+        mokletdevAppDelegate * appDelegate = (mokletdevAppDelegate *) [[UIApplication sharedApplication] delegate];
+        MPlayer = [MelonPlayer sharedInstance];
+        
+        //    top_label.hidden=NO;
+        //    players = [[mokletdevPlayerViewController alloc]init];
+        //    players.sSongId     = songItem.songId;
+        //    players.sSongTitle  = songItem.songName;
+        //	players.sArtistId   = songItem.artistId;
+        //    players.sArtistName = songItem.artistName;
+        //	players.sAlbumId    = songItem.albumId;
+        //    players.sAlbumName  = songItem.albumName;
+        //	players.playTime    = songItem.playtime;
+        //	UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:players];
+        //	[self.navigationController presentModalViewController:navigationController animated:YES];
+        //	[navigationController release];
+        //	[players release];
+        
+        // check current playing song.
+        
+        if ([appDelegate.nowPlayingPlaylistDefault count] > 0)
+        {
+            LocalPlaylist1 * npSong = [[LocalPlaylist1 alloc] init];
+            npSong = (LocalPlaylist1 *) [appDelegate.nowPlayingPlaylistDefault objectAtIndex:appDelegate.nowPlayingSongIndex];
+            
+            NSLog(@"npSong.songId - songItem.songId : %@ - %@.", npSong.songId, songItem.songId);
+            if ([npSong.songId isEqualToString:songItem.songId])
             {
-                if (![MPlayer isPaused])
+                if ([MPlayer isPlaying])
                 {
-                    [MPlayer setGettingNewSong:[NSNumber numberWithBool:YES]];
-                    //[MPlayer playThisSong:appDelegate.eUserId andSongId:songItem.songId];
-                    [MPlayer periksaLagudanStream:songItem.songId];
+                    if (![MPlayer isPaused])
+                    {
+                        [MPlayer setGettingNewSong:[NSNumber numberWithBool:YES]];
+                        //[MPlayer playThisSong:appDelegate.eUserId andSongId:songItem.songId];
+                        [MPlayer periksaLagudanStream:songItem.songId];
+                        [players createTimer];
+                        return;
+                    }
+                    
                     [players createTimer];
                     return;
                 }
-                
-                [players createTimer];
-                return;
             }
         }
+        
+        if ([MPlayer isGettingNewSong])
+            return;
+        [MPlayer setGettingNewSong:[NSNumber numberWithBool:YES]];
+        
+        [PlayerLib addToPlaylistofSong:songItem];
+        
+        [MPlayer stop];
+        NSString * songPath = [MPlayer checkLocalSong:songItem.songId forUserId:appDelegate.eUserId];
+        NSURL * songURL = [NSURL fileURLWithPath:songPath];
+        
+        if ([songPath isEqualToString:@""]) // streaming
+        {
+            [MPlayer setSongType:0];
+            //[MPlayer playThisSong:appDelegate.eUserId andSongId:songItem.songId];
+            [MPlayer periksaLagudanStream:songItem.songId];
+        }
+        else
+        {
+            [MPlayer setSongType:1];
+            [MPlayer playSongWithURL:songURL];
+            [players createTimer];
+        }
     }
-    
-    if ([MPlayer isGettingNewSong])
-        return;
-    [MPlayer setGettingNewSong:[NSNumber numberWithBool:YES]];
-    
-    [PlayerLib addToPlaylistofSong:songItem];
-    
-    [MPlayer stop];
-    NSString * songPath = [MPlayer checkLocalSong:songItem.songId forUserId:appDelegate.eUserId];
-    NSURL * songURL = [NSURL fileURLWithPath:songPath];
-    
-    if ([songPath isEqualToString:@""]) // streaming
-    {
-        [MPlayer setSongType:0];
-        //[MPlayer playThisSong:appDelegate.eUserId andSongId:songItem.songId];
-        [MPlayer periksaLagudanStream:songItem.songId];
+    else if(tableView == searchResultAlbum) {
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
+        
+        albumListObject * albumItem = [self.netraMutableAlbumArray objectAtIndex:indexPath.row];
+        
+        MusicListControllerByAlbum *viewController = [[MusicListControllerByAlbum alloc] init];
+        [viewController setAlbumName:albumItem.albumName];
+        [viewController setAlbumId:albumItem.albumId];
+        // Push View Controller onto Navigation Stack
+        [self.navigationController pushViewController:viewController animated:YES];
     }
-    else
-    {
-        [MPlayer setSongType:1];
-        [MPlayer playSongWithURL:songURL];
-        [players createTimer];
+    else if(tableView == searchResultArtist) {
+        [tableView deselectRowAtIndexPath:indexPath animated:YES];
+        
+        artistListObject * artistItem = [self.netraMutableArtistArray objectAtIndex:indexPath.row];
+        
+        AlbumListControllerByArtist *viewController = [[AlbumListControllerByArtist alloc] init];
+        [viewController setArtistName:artistItem.artistName];
+        [viewController setArtistId:artistItem.artistId];
+        // Push View Controller onto Navigation Stack
+        [self.navigationController pushViewController:viewController animated:YES];
     }
 }
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-	SearchCell *cell       = [searchResult dequeueReusableCellWithIdentifier:@"Cell"];
-	songListObject *dataObject=[self.netraMutableArray objectAtIndex:indexPath.row];
-	if (cell == nil)
-	{
-		cell= [[SearchCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"Cell"];
-		//cell=[[[NetraCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier ]autorelease];
-	}
-	UIView *myBackView = [[UIView alloc] initWithFrame:cell.frame];
-	myBackView.backgroundColor = [UIColor colorWithRed:0.859 green:0.859 blue:0.859 alpha:1];
-	cell.selectedBackgroundView = myBackView;
-	[myBackView release];
-	cell.SongTitle.text=dataObject.songName;
-	cell.Singer.text=dataObject.artistName;
-	//cell.detailTextLabel.highlightedTextColor=[UIColor colorWithRed:0.275 green:0.275 blue:0.275 alpha:1];
-	//cell.detailTextLabel.text=dataObject.albumName;
-	NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",dataObject.songId];
-	
-	[cell.image setImageWithURL:[NSURL URLWithString:baseUrls]
-    placeholderImage:[UIImage imageNamed:@"placeholder"]];
-	
-	
-	return cell;
-	
+    NSLog(@"indexPath.row %i", indexPath.row);
+    
+    if(tableView == searchResult) {
+        SearchCellSong *cell       = [searchResult dequeueReusableCellWithIdentifier:@"Cell"];
+        songListObject *dataObject=[self.netraMutableArray objectAtIndex:indexPath.row];
+        if (cell == nil)
+        {
+            cell= [[SearchCellSong alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"Cell"];
+            //cell=[[[NetraCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier ]autorelease];
+        }
+        UIView *myBackView = [[UIView alloc] initWithFrame:cell.frame];
+        myBackView.backgroundColor = [UIColor colorWithRed:0.859 green:0.859 blue:0.859 alpha:1];
+        cell.selectedBackgroundView = myBackView;
+        [myBackView release];
+        cell.SongTitle.text=dataObject.songName;
+        cell.Singer.text=dataObject.artistName;
+        [cell.download addTarget:self action:@selector(download:) forControlEvents:UIControlEventTouchUpInside];
+        cell.download.tag=indexPath.row;
+        //cell.detailTextLabel.highlightedTextColor=[UIColor colorWithRed:0.275 green:0.275 blue:0.275 alpha:1];
+        //cell.detailTextLabel.text=dataObject.albumName;
+        NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",dataObject.songId];
+        
+        [cell.image setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+            
+        } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+            
+        }];
+        
+        return cell;
+    }
+    else if(tableView == searchResultAlbum){
+        SearchCell *cell       = [searchResult dequeueReusableCellWithIdentifier:@"Cell"];
+        albumListObject *dataObject=[self.netraMutableAlbumArray objectAtIndex:indexPath.row];
+        if (cell == nil)
+        {
+            cell= [[SearchCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"Cell"];
+            //cell=[[[NetraCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier ]autorelease];
+        }
+        UIView *myBackView = [[UIView alloc] initWithFrame:cell.frame];
+        myBackView.backgroundColor = [UIColor colorWithRed:0.859 green:0.859 blue:0.859 alpha:1];
+        cell.selectedBackgroundView = myBackView;
+        [myBackView release];
+        cell.SongTitle.text=dataObject.albumName;
+        cell.Singer.text=dataObject.mainArtistName;
+        //cell.detailTextLabel.highlightedTextColor=[UIColor colorWithRed:0.275 green:0.275 blue:0.275 alpha:1];
+        //cell.detailTextLabel.text=dataObject.albumName;
+        NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/file.do?fileuid=%@",dataObject.albumLImgPath];
+        
+        [cell.image setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+            
+        } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+            
+        }];
+        
+        return cell;
+    }
+    else if(tableView == searchResultArtist){
+        SearchCell *cell       = [searchResult dequeueReusableCellWithIdentifier:@"Cell"];
+        artistListObject *dataObject=[self.netraMutableArtistArray objectAtIndex:indexPath.row];
+        if (cell == nil)
+        {
+            cell= [[SearchCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"Cell"];
+            //cell=[[[NetraCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier ]autorelease];
+        }
+        UIView *myBackView = [[UIView alloc] initWithFrame:cell.frame];
+        myBackView.backgroundColor = [UIColor colorWithRed:0.859 green:0.859 blue:0.859 alpha:1];
+        cell.selectedBackgroundView = myBackView;
+        [myBackView release];
+        cell.SongTitle.text=dataObject.artistName;
+        cell.Singer.text=dataObject.nationality;
+        //cell.detailTextLabel.highlightedTextColor=[UIColor colorWithRed:0.275 green:0.275 blue:0.275 alpha:1];
+        //cell.detailTextLabel.text=dataObject.albumName;
+        NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/file.do?fileuid=%@",dataObject.artistMImgPath];
+        
+        [cell.image setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+            
+        } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+            
+        }];
+        
+        return cell;
+    }
 	
 }
 
@@ -417,7 +947,17 @@ int selectedResultIndex;
 }
 */
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-	return 75;
+    if(tableView == searchResult) {
+        return SONG_ROW_HEIGHT;
+    }
+    else if(tableView == searchResultAlbum){
+        return ALBUM_ROW_HEIGHT;
+    }
+    else if(tableView == searchResultArtist){
+        return ARTIST_ROW_HEIGHT;
+    }
+    else
+        return 0;
 }
 
 - (void) showWaitMessage: (NSNotification *) notification
@@ -450,6 +990,113 @@ int selectedResultIndex;
 	[players release];
     
     self.gTunggu.hidden = YES;
+}
+
+-(void)download:(id)sender
+{
+    
+	NSLog(@"do download");
+	NSMutableArray *users_active = [NSMutableArray arrayWithArray:[EUserBrief MR_findAllSortedBy:@"userId" ascending:YES]];
+	
+	
+	NSInteger i = [sender tag];
+	songListObject * song = [self.netraMutableArray objectAtIndex:i];
+	
+	NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+	
+	if([users_active count]>0){
+		EUserBrief *usersss=[users_active objectAtIndex:0];
+        
+        // periksa layanan
+        mokletdevAppDelegate * appDelegate = (mokletdevAppDelegate *) [[UIApplication sharedApplication] delegate];
+        if (appDelegate.isGetLayanan)
+        {
+            NSMutableArray * lyn = [NSMutableArray arrayWithArray:[Layanan MR_findAll]];
+            if ([lyn count] > 0)
+            {
+                Layanan * eLayanan = (Layanan *) [lyn objectAtIndex:0];
+                if ([eLayanan.paymentProdName isEqualToString:@""])
+                {
+                    [YRDropdownView showDropdownInView:self.view
+                                                 title:NSLocalizedString(@"Error", nill)
+                                                detail:@"Pengambilan lagu tak bisa dilakukan. Periksa kembali produk MelOn Anda. Pastikan Anda mempunyai paket yang betul."
+                                                 image:[UIImage imageNamed:@"dropdown-alert_error"]
+                     //backgroundImage:[UIImage imageNamed:@"allow"]
+                                              animated:YES
+                                             hideAfter:3];
+                    return;
+                }
+            }
+        }
+		
+		LocalPlaylist *musicFound = [LocalPlaylist MR_findFirstByAttribute:@"songId" withValue:[NSString stringWithFormat:@"%@-%@",usersss.userId,song.songId]];
+		if (!musicFound){
+			NSLog(@"musicFound---->%@",musicFound.songId);
+			DownloadList *musicQ = [DownloadList MR_findFirstByAttribute:@"songId" withValue:song.songId];
+			if (!musicQ){
+				NSLog(@"songF---->%@",musicQ.songId);
+				
+				[YRDropdownView showDropdownInView:self.view
+											 title:@"Informasi"
+											detail:@"Musik Sedang Di tambahkan ke Antrian"
+											 image:[UIImage imageNamed:@"dropdown-alert_success"]
+								   backgroundImage:[UIImage imageNamed:@"allow"]
+										  animated:YES
+										 hideAfter:3];
+				
+				
+				DownloadList *local = [DownloadList MR_createInContext:localContext];
+				local.tanggal=[NSDate date];
+				local.songId = song.songId;
+				local.songTitle = song.songName;
+				local.artistId = [NSString stringWithFormat:@"%@", song.artistId];
+				local.artistName = song.artistName;
+				local.albumId = [NSString stringWithFormat:@"%@", song.albumId];
+				local.albumName = song.albumName;
+				local.downId = @"";
+				local.userId = [NSString stringWithFormat:@"%@", usersss.userId];
+				local.tanggal = [NSDate date];
+				local.finished = [NSNumber numberWithInt:0];
+				local.playTime = [NSString stringWithFormat:@"%@", song.playtime];
+				local.status = [NSNumber numberWithInt:0];
+				
+				
+				[localContext MR_save];
+				
+				_songDownloader = [songDownloader sharedInstance];
+				[_songDownloader doDownload:song.songId userid:usersss.userId password:usersss.webPassword email:usersss.email];
+				
+			}
+			else{
+				[YRDropdownView showDropdownInView:self.view
+											 title:NSLocalizedString(@"Error", nill)
+											detail:@"Musik Sudah Di tambahkan ke Antrian"
+											 image:[UIImage imageNamed:@"dropdown-alert_warning"]
+								   backgroundImage:[UIImage imageNamed:@"warning"]
+										  animated:YES
+										 hideAfter:3];
+			}
+			
+		}
+		else{
+			[YRDropdownView showDropdownInView:self.view
+										 title:NSLocalizedString(@"Error", nill)
+										detail:@"Musik Sudah ada di Handset Anda"
+										 image:[UIImage imageNamed:@"dropdown-alert_error"]
+									  animated:YES
+									 hideAfter:3];
+		}
+		
+	}
+	else{
+		[YRDropdownView showDropdownInView:self.view
+									 title:NSLocalizedString(@"Error", nill)
+									detail:@"Silahkan login terlebih dahulu untuk dapat mengambil lagu."
+									 image:[UIImage imageNamed:@"dropdown-alert_error"]
+								  animated:YES
+								 hideAfter:3];
+	}
+	
 }
 
 #pragma mark ---

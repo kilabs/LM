@@ -24,6 +24,18 @@
 #import "mokletdevSearchMusicController.h"
 #import "LocalPlaylist1.h"
 
+/******* Google Analytics Tracking *******/
+static NSString *const kGaPropertyId = @"UA-23163798-6";
+static NSString *const kTrackingPreferenceKey = @"allowTracking";
+static BOOL const kGaDryRun = NO;
+static int const kGaDispatchPeriod = 120;
+
+@interface mokletdevAppDelegate ()
+
+- (void)initializeGoogleAnalytics;
+
+@end
+
 
 @implementation mokletdevAppDelegate
 
@@ -66,6 +78,8 @@ NSString * tempWebPassword;
 }
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    NSLog(@"application didFinishLaunchingWithOptions");
+    
 	self.pl=[[mokletdevPlayerViewController alloc]init];
 	[[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(setCenter:)
 												name:@"dealNotification"
@@ -83,7 +97,9 @@ NSString * tempWebPassword;
 	   [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(reachabilityChanged:) name: kReachabilityChangedNotification object: nil];
 	*/
 	
-    [MagicalRecord setupCoreDataStackWithStoreNamed:@"MyDatabase.sqlite"];
+    //[MagicalRecord setupCoreDataStackWithStoreNamed:@"MyDatabase.sqlite"];
+    [MagicalRecord setupCoreDataStackWithAutoMigratingSqliteStoreNamed:@"MyDatabase.sqlite"]; //auto migration db version
+    
     self.nowPlayingPlayOrder = [[[NSMutableArray alloc] init] autorelease];
     self.nowPlayingPlaylistDefault = [[[NSMutableArray alloc] init] autorelease];
     
@@ -219,10 +235,28 @@ NSString * tempWebPassword;
 //		[self loadWindow];
 //	}
 //	[MagicalRecord setupCoreDataStackWithStoreNamed:@"MyDatabase.sqlite"];
-		
+    
+    //google analytics
+    [self initializeGoogleAnalytics];
+    
     return YES;
 	
 }
+
+- (void)initializeGoogleAnalytics {
+    NSDictionary *appDefaults = @{kTrackingPreferenceKey: @(YES)};
+    [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
+    
+    [GAI sharedInstance].optOut = ![[NSUserDefaults standardUserDefaults] boolForKey:kTrackingPreferenceKey];
+    
+    [[GAI sharedInstance] setDispatchInterval:kGaDispatchPeriod];
+    [[GAI sharedInstance] setDryRun:kGaDryRun];
+    [GAI sharedInstance].trackUncaughtExceptions = YES;
+    [[[GAI sharedInstance] logger] setLogLevel:kGAILogLevelVerbose];
+    self.tracker = [[GAI sharedInstance] trackerWithTrackingId:kGaPropertyId];
+    
+}
+
 -(void)searchWindowGlobal{
 	/*mokletdevSearchMusicController *searchWindow=[[[mokletdevSearchMusicController alloc]init] autorelease];
 	UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:searchWindow];
@@ -238,7 +272,7 @@ NSString * tempWebPassword;
 	self.guidePage=[[intro alloc]init];
     self.window.rootViewController = self.guidePage;
 	[self.viewController presentModalViewController:self.guidePage animated:YES];
-
+    NSLog(@"intro show");
     [self.window makeKeyAndVisible];
 }
 -(void)loadWindow{
@@ -274,6 +308,19 @@ NSString * tempWebPassword;
 }
 -(void)bigPlayer{
     NSLog(@"eka check before here.");
+    
+    //create new instance player and get current song (Totok)
+    mokletdevAppDelegate * appDelegate = (mokletdevAppDelegate *) [[UIApplication sharedApplication] delegate];
+    LocalPlaylist1 * songItem = (LocalPlaylist1 *) [appDelegate.nowPlayingPlaylistDefault objectAtIndex:appDelegate.nowPlayingSongIndex];
+    
+    self.pl = [[mokletdevPlayerViewController alloc]init];
+    self.pl.sSongId     = songItem.songId;
+    self.pl.sSongTitle  = songItem.songTitle;
+	self.pl.sArtistId   = songItem.artistId;
+    self.pl.sArtistName = songItem.artistName;
+	self.pl.sAlbumId    = songItem.albumId;
+    self.pl.sAlbumName  = songItem.albumName;
+    
 	UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:self.pl];
 
 	//self.mainViewController.centerPanel = [[UINavigationController alloc] initWithRootViewController:[[NSClassFromString(self.lastController) alloc] init]];
@@ -286,7 +333,7 @@ NSString * tempWebPassword;
 -(void)setCenter:(NSNotification *)notification{
 	
 	NSMutableArray *dict = (NSMutableArray*)notification.object;
-	
+	//NSLog([dict objectAtIndex:0]);
 	//self.mainViewController.centerPanel = [[UINavigationController alloc] initWithRootViewController:[[[dict objectAtIndex:0] alloc] init]];
 	if(notification==nil){
 		//	self.mainViewController.centerPanel =nil;
@@ -298,6 +345,11 @@ NSString * tempWebPassword;
 	else if([[dict objectAtIndex:0] isEqualToString:self.lastController]){
 		
 	}
+    
+    else if([[dict objectAtIndex:0] isEqualToString:@"intro"]){
+		[self loadIntro];
+	}
+    
 	else{
 		self.mainViewController.centerPanel = [[UINavigationController alloc] initWithRootViewController:[[NSClassFromString([dict objectAtIndex:0]) alloc] init]];
 		self.lastController=[dict objectAtIndex:0];
@@ -325,7 +377,10 @@ NSString * tempWebPassword;
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
 	[FBAppCall handleDidBecomeActiveWithSession:self.session];
-	}
+    
+    //google analytics
+    [GAI sharedInstance].optOut = ![[NSUserDefaults standardUserDefaults] boolForKey:kTrackingPreferenceKey];
+}
 
 - (void)applicationWillTerminate:(UIApplication *)application {
 	[MagicalRecord cleanUp];
@@ -346,8 +401,8 @@ NSString * tempWebPassword;
                               self.eUserName, @"_UNAME",
 							  self.eWebPassword, @"_UPASS",
                               @"cu", @"_DIR",
-                              @"iOS Client", @"_CNAME",
-                              @"DC6AE040A9200D384D4F08C0360A2607", @"_CPASS",
+                              [NSString stringWithUTF8String:CNAME], @"_CNAME",
+                              [NSString stringWithUTF8String:CPASS], @"_CPASS",
                               nil] autorelease];
     
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:[NSURL URLWithString:sURL]];
@@ -574,7 +629,9 @@ NSString * tempWebPassword;
         NSLog(@"Error while request : %@.", [error description]);
     }];
     
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 

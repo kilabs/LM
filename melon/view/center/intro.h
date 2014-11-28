@@ -8,6 +8,10 @@
 
 #import <UIKit/UIKit.h>
 #import "MYIntroductionView.h"
-@interface intro : UIViewController<MYIntroductionDelegate>
+#import "GAI.h"
+#import "GAIDictionaryBuilder.h"
+#import "GAITrackedViewController.h"
+
+@interface intro : GAITrackedViewController<MYIntroductionDelegate>
 
 @end

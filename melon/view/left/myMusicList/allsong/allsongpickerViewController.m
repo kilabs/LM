@@ -20,6 +20,8 @@
 #import "YRDropdownView.h"
 #include "Encryption.h"
 #include "GlobalDefine.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
+
 @interface allsongpickerViewController ()
 {
 @private
@@ -64,7 +66,7 @@
 		empty.hidden=YES;
 		
 		empty_title=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 280, 44)];
-		empty_title.text=@"Local Song Empty";
+		empty_title.text=@"Local Song Kosong";
 		empty_title.backgroundColor=[UIColor clearColor];
 		empty_title.textAlignment=NSTextAlignmentCenter;
 		empty_title.textColor=[UIColor colorWithRed:0.557 green:0.557 blue:0.557 alpha:1];
@@ -172,7 +174,7 @@
 		
 		NSMutableArray *users_active = [NSMutableArray arrayWithArray:[EUserBrief MR_findAllSortedBy:@"userId" ascending:YES]];
 		EUserBrief *user_now=[users_active objectAtIndex:0];
-		NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@/song?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&newSongId=%@&plasylitId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,self.playlist_id,user_now.username,user_now.webPassword,string,self.playlist_id];
+		NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@/song?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&newSongId=%@&plasylitId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,self.playlist_id, [NSString stringWithUTF8String:CNAME], [NSString stringWithUTF8String:CPASS], user_now.username,user_now.webPassword,string,self.playlist_id];
 		NSURL *URL=[NSURL URLWithString:sURL];
 		NSString *properlyEscapedURL = [sURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:URL];
@@ -198,7 +200,7 @@
 			
 		} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Gagal Menambahkan Musik ke dalam Playlist"
 										 image:[UIImage imageNamed:@"dropdown-alert_error"]
 									  animated:YES
@@ -206,7 +208,9 @@
 			
 		}];
 		
-		[operation start];
+		//[operation start];
+        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+        [operationQueue addOperation:operation];
 		[httpClient release];
 		
 
@@ -282,8 +286,12 @@
 	cell.excerpt.text = currentSongList.artistName;
 	cell.albumName.text = currentSongList.albumName;
 	NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",currentSongList.realSongid];
-	[cell.thumbnail setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
+
+    [cell.thumbnail setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
     cell.facebook.hidden=YES;
 	cell.twitter.hidden=YES;
 	cell.play.hidden=YES;

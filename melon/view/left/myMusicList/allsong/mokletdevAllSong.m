@@ -21,6 +21,7 @@
 #import "YRDropdownView.h"
 #import "PlaylistBrief.h"
 #import "GlobalDefine.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
 
 #import <Twitter/Twitter.h>
 #import <social/Social.h>
@@ -49,6 +50,10 @@ bool isFiltered=false;
 
 int selectedResultIndex;
 
+-(NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return NSLocalizedString(@"Delete", nil);
+}
+
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -75,7 +80,7 @@ int selectedResultIndex;
 		empty.backgroundColor=[UIColor clearColor];
 		
 		empty_title=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 280, 44)];
-		empty_title.text=@"All Song Empty";
+		empty_title.text=NSLocalizedString(@"All Song Empty",nil);
 		empty_title.backgroundColor=[UIColor clearColor];
 		empty_title.textAlignment=NSTextAlignmentCenter;
 		empty_title.textColor=[UIColor colorWithRed:0.557 green:0.557 blue:0.557 alpha:1];
@@ -107,6 +112,9 @@ int selectedResultIndex;
 											  object:nil];
     
     top_label.hidden = NO;
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name All Song", nil);
 	
 }
 -(void)facebookShare:(id)sender{
@@ -115,8 +123,8 @@ int selectedResultIndex;
 	//songListObject *dataObject=[self.netraMutableArray objectAtIndex:i];
     LocalPlaylist * dataObject = [self.AllSongList objectAtIndex:[sender tag]];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via MelOn for IOS", dataObject.songTitle, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via LangitMusik for IOS", dataObject.songTitle, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
 	
 	if([SLComposeViewController isAvailableForServiceType:SLServiceTypeFacebook]) {
@@ -157,8 +165,8 @@ int selectedResultIndex;
 -(void)twitterShare:(id)sender{
 	    LocalPlaylist * dataObject = [self.AllSongList objectAtIndex:[sender tag]];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *twitContent=[NSString stringWithFormat:@"#MelOnPlaying %@ by %@ %@ via MelOn for IOS", dataObject.songTitle, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *twitContent=[NSString stringWithFormat:@"#LangitMusik %@ by %@ %@ via LangitMusik for IOS", dataObject.songTitle, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
     Class TWTweetClass = NSClassFromString(@"TWTweetComposeViewController");
     if (TWTweetClass != nil)
@@ -246,7 +254,7 @@ int selectedResultIndex;
 	}
 	else{
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:@"Silahkan login terlebih dahulu untuk dapat Memasukkan lagu dalam playlist."
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -260,7 +268,7 @@ int selectedResultIndex;
 	
 	NSMutableArray *users_active = [NSMutableArray arrayWithArray:[EUserBrief MR_findAllSortedBy:@"userId" ascending:YES]];
 	EUserBrief *user_now=[users_active objectAtIndex:0];
-	NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@/song?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&newSongId=%@&plasylitId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,playlistId,user_now.username,user_now.webPassword,songId,playlistId];
+	NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists/%@/song?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@&_method=PUT&newSongId=%@&playlistId=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,playlistId, [NSString stringWithUTF8String:CNAME], [NSString stringWithUTF8String:CPASS], user_now.username,user_now.webPassword,songId,playlistId];
 	NSURL *URL=[NSURL URLWithString:sURL];
 	NSString *properlyEscapedURL = [sURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:URL];
@@ -284,7 +292,7 @@ int selectedResultIndex;
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:gagal
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -292,7 +300,9 @@ int selectedResultIndex;
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 	
 	
@@ -300,7 +310,7 @@ int selectedResultIndex;
 -(void)loadPlaylist:(NSString*)userId pass:(NSString*)pass username:(NSString *)username{
 	[self.netraMutableArrayPlaylist removeAllObjects];
 	
-    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@&offset=0&limit=100", [NSString stringWithUTF8String:MAPI_SERVER], userId,username,pass];
+    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@&offset=0&limit=100", [NSString stringWithUTF8String:MAPI_SERVER], userId, [NSString stringWithUTF8String:CNAME], [NSString stringWithUTF8String:CPASS], username,pass];
 	NSURL *URL=[NSURL URLWithString:sURL];
 	NSString *properlyEscapedURL = [sURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     AFHTTPClient * httpClient = [[AFHTTPClient alloc] initWithBaseURL:URL];
@@ -334,7 +344,9 @@ int selectedResultIndex;
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 -(void)initLayout{
@@ -348,7 +360,7 @@ int selectedResultIndex;
 	top_label.backgroundColor=[UIColor clearColor];
 	
 	TitleBig=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 230, 44)];
-	TitleBig.text=@"All Songs";
+	TitleBig.text=NSLocalizedString(@"All Songs",nil);
 	TitleBig.textAlignment=NSTextAlignmentCenter;
 	TitleBig.backgroundColor=[UIColor clearColor];
 	[TitleBig setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -445,8 +457,11 @@ int selectedResultIndex;
 	cell.excerpt.text = currentSongList.artistName;
 	cell.albumName.text = currentSongList.albumName;
 	NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",currentSongList.realSongid];
-	[cell.thumbnail setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
+    [cell.thumbnail setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
     
 	cell.download.hidden=YES;
 	cell.play.tag=indexPath.row;

@@ -46,7 +46,7 @@ BOOL isTimerOff = YES;
 	top_label.backgroundColor=[UIColor clearColor];
 	
 	TitleBig=[[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 230, 44)] autorelease];
-	TitleBig.text=@"Download Queue";
+	TitleBig.text=NSLocalizedString(@"Download Queue",nil);
 	TitleBig.textAlignment=NSTextAlignmentCenter;
 	TitleBig.backgroundColor=[UIColor clearColor];
 	[TitleBig setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -110,6 +110,9 @@ BOOL isTimerOff = YES;
         //[self startDownloadProgressTimer:Nil];
         [self startDownloadProgressTimer:[mySongDownloader getDowloadListIndex]];
     }
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Download Queue", nil);
 
 }
 
@@ -330,7 +333,7 @@ BOOL isTimerOff = YES;
 -(void)playme:(id)sender{
 	[YRDropdownView showDropdownInView:self.view
 								 title:@"Informasi"
-								detail:@"klik menu All Song untuk memainkan lagu yang sudah didownload"
+								detail:@"klik menu Semua Lagu untuk memainkan lagu yang sudah didownload"
 								 image:[UIImage imageNamed:@"dropdown-alert_success"]
 					   backgroundImage:[UIImage imageNamed:@"allow"]
 							  animated:YES

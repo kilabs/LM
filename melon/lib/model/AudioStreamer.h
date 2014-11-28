@@ -204,6 +204,7 @@ extern NSString * const ASUpdateMetadataNotification;
 - (void)seekToTime:(double)newSeekTime;
 - (double)calculatedBitRate;
 - (void) setVolume:(float) level;
+- (float) getVolume;
 
 // level metering
 - (float)peakPowerForChannel:(NSUInteger)channelNumber;

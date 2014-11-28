@@ -9,8 +9,9 @@
 #import <UIKit/UIKit.h>
 #import "songDownloader.h"
 #import "playerLocalViewController.h"
+#import "GAITrackedViewController.h"
 @class songDownloader;
-@interface downloadQueueViewController : UIViewController<UITableViewDelegate,UITableViewDataSource>
+@interface downloadQueueViewController : GAITrackedViewController<UITableViewDelegate,UITableViewDataSource>
 {
 	UITableView *q;
 	UIView *top_label;

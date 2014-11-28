@@ -9,6 +9,7 @@
 #import "mokletdevHistoryController.h"
 #import "AFNetworking.h"
 #import "songListObject.h"
+#import "PageCacheList.h"
 #import "netracell_.h"
 #import <social/Social.h>
 #import <accounts/Accounts.h>
@@ -25,6 +26,7 @@
 #import "songDownloader.h"
 #import "YRDropdownView.h"
 #import "localplayer.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
 
 const int tag_load = 127431123;
 bool firstLoad_=0;
@@ -32,6 +34,7 @@ bool fetch_=0;
 bool search_=0;
 bool opened_=0;
 bool search_active_=0;
+bool already_cache_ = 0;
 NSString * bitRateCD_;
 NSString * codecTypeCD_;
 NSString * contentID_;
@@ -75,7 +78,7 @@ int selectedResultIndex;
 		
 		spinner = [[TJSpinner alloc] initWithSpinnerType:kTJSpinnerTypeActivityIndicator];
         spinner.hidesWhenStopped = YES;
-		[spinner setColor:[UIColor colorWithRed:0.478 green:0.651 blue:0.176 alpha:1]];
+		[spinner setColor:[UIColor colorWithRed:COLORWITHRED green:COLORWITHGREEN blue:COLORWITHBLUE alpha:1]];
         [spinner setInnerRadius:10];
         [spinner setOuterRadius:20];
         [spinner setStrokeWidth:8];
@@ -149,8 +152,7 @@ int selectedResultIndex;
 		[leftbutton release];
 		
 		
-		current_page_=0;
-		[self fetchData_];
+		current_page_=1;
 
 		[self.view addSubview:searchView_];
 		
@@ -162,7 +164,7 @@ int selectedResultIndex;
 		top_label_=[[UIView alloc]initWithFrame:CGRectMake(45, 0, 186, 44)];
 		top_label_.backgroundColor=[UIColor clearColor];
 		TitleBig_=[[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 230, 44)] autorelease];
-		TitleBig_.text=@"Download History";
+		TitleBig_.text=NSLocalizedString(@"Download History",nil);
 		TitleBig_.textAlignment=NSTextAlignmentCenter;
 		TitleBig_.backgroundColor=[UIColor clearColor];
 		[TitleBig_ setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -198,7 +200,7 @@ int selectedResultIndex;
 		empty.backgroundColor=[UIColor clearColor];
 		
 		empty_title=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 280, 44)];
-		empty_title.text=@"Download Empty";
+		empty_title.text=NSLocalizedString(@"Download Empty",nil);
 		empty_title.backgroundColor=[UIColor clearColor];
 		empty_title.textAlignment=NSTextAlignmentCenter;
 		empty_title.textColor=[UIColor colorWithRed:0.557 green:0.557 blue:0.557 alpha:1];
@@ -273,6 +275,8 @@ int selectedResultIndex;
     
     selectedResultIndex = 0;
     
+    [self fetchData_];
+    
     [self installNotification];
     
 }
@@ -282,16 +286,54 @@ int selectedResultIndex;
     [self uninstallNotification];
 }
 
+-(void)loadCacheData{
+    //check store data
+    NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+    PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"download_history" inContext:localContext];
+    if (cache){
+        total_page_=[[cache.cacheData objectForKey:@"totalSize"]intValue]/10;
+        
+        //clear song data
+        [self.netraMutableArray_ removeAllObjects];
+		[downloadHistory reloadData];
+        
+        //NSLog(@"LOAD CACHE %@", cache.cacheData);
+        
+        for(id netraDictionary in [cache.cacheData objectForKey:@"dataList"]){
+            songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
+			if (![self.netraMutableArray_ containsObject:songListObjectData]) {
+                [self.netraMutableArray_ addObject:songListObjectData];
+				
+            }
+			
+			[songListObjectData release];
+		}
+        
+        //NSLog(@"LOAD CACHE AFTER %@", self.netraMutableArray_);
+        
+        already_cache_ = 1;
+        
+        [self removeHud];
+        [self loadSomde];
+    }
+}
+
 -(void)fetchData_{
 	_users = [NSMutableArray arrayWithArray:[EUserBrief MR_findAllSortedBy:@"userId" ascending:YES]];
 	if(firstLoad_==1){
 		downloadHistory.hidden=YES;
 		
 		[self showHud];
+        
+        //load cache first
+        [self loadCacheData];
 	}
+    
+    NSString * offset = [NSString stringWithFormat:@"%d", (current_page_ -1)];
+    
 	EUserBrief *usersss=[_users objectAtIndex:0];
 	NSString *client=[NSString stringWithFormat:@"iOS Client"];
-	NSString *baseUrl=[NSString stringWithFormat:@"http://118.98.31.135:8000/mapi/download/history/all?offset=%d&limit=10&userId=%@&_CNAME=%@&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@",current_page_,usersss.userId,client,usersss.username,usersss.webPassword];
+	NSString *baseUrl=[NSString stringWithFormat:@"%@download/history/all?offset=%@&limit=10&userId=%@&_CNAME=%@&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@",[NSString stringWithUTF8String:MAPI_SERVER],offset,usersss.userId,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS],usersss.username,usersss.webPassword];
 	NSLog(@"baseUrl adalah-->%@",baseUrl);
 	NSString *properlyEscapedURL = [baseUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 	//  NSString * sURL = [NSString stringWithFormat:@"%@download/history/drm", [NSString stringWithUTF8String:MAPI_SERVER]];
@@ -312,26 +354,53 @@ int selectedResultIndex;
     
 	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
         //NSLog(@"responseObject-->%@",responseObject);
-		total_page_=[[responseObject objectForKey:@"totalSize"]intValue]/10;
-		
-		for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
-			//NSLog(@"responseObject-->%@",responseObject);
-			songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
-			if (![self.netraMutableArray_ containsObject:songListObjectData]) {
-                [self.netraMutableArray_ addObject:songListObjectData];
-				
+        NSInteger offset =[[responseObject objectForKey:@"offset"]intValue];
+        
+        //check store data
+        NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+        PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"download_history" inContext:localContext];
+        if (!cache || offset>=10){
+            total_page_=[[responseObject objectForKey:@"totalSize"]intValue]/10;
+            
+            for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
+                //NSLog(@"responseObject-->%@",responseObject);
+                songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
+                if (![self.netraMutableArray_ containsObject:songListObjectData]) {
+                    [self.netraMutableArray_ addObject:songListObjectData];
+                    
+                }
+                
+                [songListObjectData release];
             }
-			
-			[songListObjectData release];
+            
+            [self performSelector:@selector(loadSomde) withObject:self afterDelay:2];
 		}
-		
-		[self performSelector:@selector(loadSomde) withObject:self afterDelay:2];
-		
+        
+        NSDictionary *responseJSON = [[NSDictionary alloc] initWithDictionary:responseObject];
+       
+        if(offset <= 1){
+            if(responseJSON.count > 0){
+                NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+                PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"download_history" inContext:localContext];
+                if (cache) {
+                    cache.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+                }
+                else {
+                    //save to local db
+                    PageCacheList *local = [PageCacheList MR_createInContext:localContext];
+                    local.pageType = @"download_history";
+                    local.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+                }
+                [localContext MR_save];
+            }
+            
+            NSLog(@"SAVE TO DB");
+        }
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Terjadi masalah ketika mengambil data dari server. Pastikan koneksi jaringan Anda dan coba kembali lagi."
 										 image:[UIImage imageNamed:@"dropdown-alert"]
 									  animated:YES
@@ -340,7 +409,9 @@ int selectedResultIndex;
 		}
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
 	[operation release];
     
     currTableContentType_ = NEWRELEASE;
@@ -452,8 +523,11 @@ int selectedResultIndex;
 	cell.play.tag=indexPath.row;
 	cell.download.tag=indexPath.row;
 	NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",dataObject.songId];
-	[cell.thumbnail setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
+    [cell.thumbnail setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
 	
 	cell.length.text=[NSString stringWithFormat:@"%d : %d", minutes,seconds];
 	
@@ -498,8 +572,8 @@ int selectedResultIndex;
 	
 	songListObject *dataObject=[self.netraMutableArray_ objectAtIndex:i];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *twitContent=[NSString stringWithFormat:@"#MelOnPlaying %@ by %@ %@ via MelOn for IOS", dataObject.songName, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *twitContent=[NSString stringWithFormat:@"#LangitMusik %@ by %@ %@ via LangitMusik for IOS", dataObject.songName, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
     Class TWTweetClass = NSClassFromString(@"TWTweetComposeViewController");
     if (TWTweetClass != nil)
@@ -539,8 +613,8 @@ int selectedResultIndex;
 	
 	songListObject *dataObject=[self.netraMutableArray_ objectAtIndex:i];
 	//NSString *shortenedURL=[[NSString alloc]init];
-	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://melon.co.id/album/detail.do?albumId=%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
-	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via MelOn for IOS", dataObject.songName, dataObject.artistName,shorturl];
+	NSString *shorturl= [NSString stringWithContentsOfURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://api.bit.ly/v3/shorten?login=melonindonesia2012&apikey=R_69f312e2046182f9fdc2e57bbdadb46f&longUrl=http://langitmusik.com/album/%@&format=txt",dataObject.albumId]] encoding:NSUTF8StringEncoding error:nil];
+	NSString *facebooContent=[NSString stringWithFormat:@"is listening to %@ by %@ %@ via LangitMusik for IOS", dataObject.songName, dataObject.artistName,shorturl];
 	//Check if our weak library (Twitter.framework) is available
 	
 	if([SLComposeViewController isAvailableForServiceType:SLServiceTypeFacebook]) {
@@ -605,8 +679,8 @@ int selectedResultIndex;
                 if ([eLayanan.paymentProdName isEqualToString:@""])
                 {
                     [YRDropdownView showDropdownInView:self.view
-                                                 title:@"Galat"
-                                                detail:@"Pengambilan lagu tak bisa dilakukan. Periksa kembali produk MelOn Anda. Pastikan Anda mempunyai paket yang betul."
+                                                 title:NSLocalizedString(@"Error", nill)
+                                                detail:@"Pengambilan lagu tak bisa dilakukan. Periksa kembali produk LangitMusik Anda. Pastikan Anda mempunyai paket yang betul."
                                                  image:[UIImage imageNamed:@"dropdown-alert_error"]
                      //backgroundImage:[UIImage imageNamed:@"allow"]
                                               animated:YES
@@ -654,7 +728,7 @@ int selectedResultIndex;
 			}
 			else{
 				[YRDropdownView showDropdownInView:self.view
-											 title:@"Galat"
+											 title:NSLocalizedString(@"Error", nill)
 											detail:@"Musik Sudah Di tambahkan ke Antrian"
 											 image:[UIImage imageNamed:@"dropdown-alert_warning"]
 								   backgroundImage:[UIImage imageNamed:@"warning"]
@@ -665,7 +739,7 @@ int selectedResultIndex;
 		}
 		else{
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Musik Sudah ada di Handset Anda"
 										 image:[UIImage imageNamed:@"dropdown-alert_error"]
 									  animated:YES
@@ -675,7 +749,7 @@ int selectedResultIndex;
 	}
 	else{
 		[YRDropdownView showDropdownInView:self.view
-									 title:@"Galat"
+									 title:NSLocalizedString(@"Error", nill)
 									detail:@"Silahkan login terlebih dahulu untuk dapat mengambil lagu."
 									 image:[UIImage imageNamed:@"dropdown-alert_error"]
 								  animated:YES
@@ -852,7 +926,8 @@ int selectedResultIndex;
 	[self showHud];
 	
 	
-	
+	//tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Download History", nil);
 }
 -(void)showHud{
 	NSLog(@"showHud");

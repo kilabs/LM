@@ -13,7 +13,7 @@
 #import "AFNetworking.h"
 #import "LocalPlaylist1.h"
 #import "mokletdevAppDelegate.h"
-
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
 
 @interface mokletdevRightViewController ()
 
@@ -143,7 +143,7 @@
 	UILabel *label = [[UILabel alloc] initWithFrame: CGRectMake(80,12, 200, 20)];
 	label.backgroundColor = [UIColor clearColor];
 	label.textColor=[UIColor colorWithRed:0.941 green:0.941 blue:0.941 alpha:1];
-    label.text=@"Melon Menu";
+    label.text=NSLocalizedString(@"LangitMusik Menu", nil);
 	[label setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:15]];
 	label.layer.shadowOpacity = 1.0;
 	label.layer.shadowRadius = 1.0;
@@ -161,11 +161,12 @@
     [super viewDidLoad];
 
 	dummyData=[[NSMutableArray alloc]init];
-	[dummyData addObject:@"New Release"];
-	[dummyData addObject:@"Top Chart"];
-	[dummyData addObject:@"Search Music"];
-	[dummyData addObject:@"Promos"];
-	[dummyData addObject:@"Music Videos"];
+	[dummyData addObject:NSLocalizedString(@"New Release", nil)];
+	[dummyData addObject:NSLocalizedString(@"Top Chart", nil)];
+	[dummyData addObject:NSLocalizedString(@"Search Music", nil)];
+	//[dummyData addObject:@"Promos"];
+	[dummyData addObject:NSLocalizedString(@"Music Videos", nil)];
+    [dummyData addObject:NSLocalizedString(@"Tutorial", nil)];
 	[[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(initPlaying:)
 												name:@"playingmini"
 											  object:nil];
@@ -257,8 +258,11 @@
 -(void)setImage:(NSString*)songId{
 	NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",songId];
 	//NSLog(@"songID-------------------->%@",songId);
-	[image setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
+    [image setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
 }
 -(void)initPlaying:(NSNotification *)notification{
     
@@ -454,27 +458,34 @@
 		[dataPass removeAllObjects];
 		[dataPass release];	
 	}
-	if(indexPath.row==1){
+	else if(indexPath.row==1){
 		[dataPass addObject:@"topChartViewController"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
 		[self.sidePanelController showCenterPanel:YES];
 		[dataPass removeAllObjects];
 		[dataPass release];
 	}
-	if(indexPath.row==2){
+	else if(indexPath.row==2){
 		[dataPass addObject:@"mokletdevSearchMusicController"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
 		[self.sidePanelController showCenterPanel:YES];
 		[dataPass removeAllObjects];
 		[dataPass release];
 	}
-	if(indexPath.row==3){
+	/*else  if(indexPath.row==3){
 		NSURL *url = [NSURL URLWithString:@"http://www.melon.co.id/event/ongoing/list.do"];
 		[[UIApplication sharedApplication] openURL:url];
 		
-	}
-	if(indexPath.row==4){
+	}*/
+	else if(indexPath.row==3){ //4
 		[dataPass addObject:@"mokletdevVideoPlayer"];
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
+		[self.sidePanelController showCenterPanel:YES];
+		[dataPass removeAllObjects];
+		[dataPass release];
+	}
+    else if(indexPath.row==4){
+		[dataPass addObject:@"intro"];
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"dealNotification" object:dataPass];
 		[self.sidePanelController showCenterPanel:YES];
 		[dataPass removeAllObjects];

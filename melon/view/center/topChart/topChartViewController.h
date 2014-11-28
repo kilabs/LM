@@ -13,10 +13,11 @@
 #import "mokletdevSearchMusicController.h"
 #import "TJSpinner.h"
 #import "ActionSheetPicker.h"
+#import "GAITrackedViewController.h"
 @class MelonPlayer;
 @class StreamingBrief;
 @class AbstractActionSheetPicker;
-@interface topChartViewController : UIViewController<UITableViewDelegate,UITableViewDataSource>
+@interface topChartViewController : GAITrackedViewController<UITableViewDelegate,UITableViewDataSource>
 {
 	UIButton* searchbutton ;
 	TJSpinner *spinnerss;

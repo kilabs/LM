@@ -67,7 +67,7 @@
     top_label.backgroundColor=[UIColor clearColor];
     
     TitleBig=[[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 230, 44)] autorelease];
-    TitleBig.text=@"Service List";
+    TitleBig.text=NSLocalizedString(@"Service List", nil);
     TitleBig.textAlignment=NSTextAlignmentCenter;
     TitleBig.backgroundColor=[UIColor clearColor];
     [TitleBig setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -204,6 +204,9 @@
 //    }
     
  	//[self fetchData];
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Service List", nil);
 }
 -(void)lefbuttonPush{
 	//[searchbar resignFirstResponder];
@@ -235,7 +238,7 @@
     
     if (userId == nil)
     {
-        [[[[UIAlertView alloc] initWithTitle:@"Galat"
+        [[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
                                      message:@"Silahkan login terlebih dahulu (kembali) untuk melihat download history ini."
                                     delegate:nil
                            cancelButtonTitle:@"OK"
@@ -248,8 +251,8 @@
     NSDictionary * params = [[[NSDictionary alloc] initWithObjectsAndKeys:
                               userId, @"userId",
                               @"cu", @"_DIR",
-                              @"iOS Client", @"_CNAME",
-                              @"DC6AE040A9200D384D4F08C0360A2607", @"_CPASS",
+                              [NSString stringWithUTF8String:CNAME], @"_CNAME",
+                              [NSString stringWithUTF8String:CPASS], @"_CPASS",
                               user_now.userId, @"_UNAME",
                               user_now.ePassword, @"_UPASS",
                               nil] autorelease];
@@ -274,7 +277,7 @@
 	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
 		//NSLog(@"[responseObject objectForKey:@paymentProdCateName]===>%@",[[responseObject objectAtIndex:0]objectForKey:@"paymentProdCateName"]);
 		[self.productname setText:[[responseObject objectAtIndex:0]objectForKey:@"paymentProdName"]];
-		[self.UserHistory setText: [NSString stringWithFormat:@"MELON SERVICE HISTORY %@",[[responseObject objectAtIndex:0]objectForKey:@"payUserNickname"]]];
+		[self.UserHistory setText: [NSString stringWithFormat:@"LANGITMUSIK SERVICE HISTORY %@",[[responseObject objectAtIndex:0]objectForKey:@"payUserNickname"]]];
 		[self.periode_start setText:[[responseObject objectAtIndex:0]objectForKey:@"useStartDate"]];
 		[self.periode_end setText:[[responseObject objectAtIndex:0]objectForKey:@"useEndDate"]];
 		
@@ -291,7 +294,7 @@
 	
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
-			[[[[UIAlertView alloc] initWithTitle:@"Galat"
+			[[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
 										 message:@"Terjadi masalah ketika mengambil data dari server. Pastikan koneksi jaringan Anda dan coba kembali lagi."
 										delegate:nil
 							   cancelButtonTitle:@"OK"
@@ -301,7 +304,9 @@
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 
 }
@@ -313,7 +318,7 @@
     
     if (userId == nil)
     {
-        [[[[UIAlertView alloc] initWithTitle:@"Galat"
+        [[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
                                      message:@"Silahkan login terlebih dahulu (kembali) untuk melihat download history ini."
                                     delegate:nil
                            cancelButtonTitle:@"OK"
@@ -325,8 +330,8 @@
     
     NSDictionary * params = [[[NSDictionary alloc] initWithObjectsAndKeys:
                               @"c", @"_DIR",
-                              @"iOS Client", @"_CNAME",
-                              @"DC6AE040A9200D384D4F08C0360A2607", @"_CPASS",
+                              [NSString stringWithUTF8String:CNAME], @"_CNAME",
+                              [NSString stringWithUTF8String:CPASS], @"_CPASS",
                               @"cu", @"_UNAME",
                               [appDelegate eUserName], @"_UNAME",
                               [appDelegate eWebPassword], @"_UPASS",
@@ -356,7 +361,7 @@
 		NSLog(@"response object--->%@",responseObject);
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
-			[[[[UIAlertView alloc] initWithTitle:@"Galat"
+			[[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
 										 message:@"Terjadi masalah ketika mengambil data dari server. Pastikan Anda telah login dan koneksi jaringan Anda ada. Silahkan coba kembali lagi."
 										delegate:nil
 							   cancelButtonTitle:@"OK"
@@ -366,7 +371,9 @@
 		
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 @end

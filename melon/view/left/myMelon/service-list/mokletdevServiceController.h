@@ -7,8 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "GAITrackedViewController.h"
 
-@interface mokletdevServiceController : UIViewController
+@interface mokletdevServiceController : GAITrackedViewController
 {
 	UIView *top_label;
 	UILabel *TitleBig;

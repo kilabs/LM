@@ -30,6 +30,8 @@ BOOL isNotificationInstalled = NO;
 BOOL isProdukBasi = NO;
 BOOL bTimerON = NO;
 
+int isCallConnect = 0;
+
 static MelonPlayer * instance = nil;
 NSString * sessionId;
 double     songPlayProgress;
@@ -78,9 +80,40 @@ double     playtime;
     }
 }
 
+- (void) registerCalls
+{
+    self.callCenter = [[CTCallCenter alloc] init];
+    NSLog(@"registering for call center events");
+    [self.callCenter setCallEventHandler: ^(CTCall* call) {
+        
+        if ([call.callState isEqualToString: CTCallStateConnected]) {
+            
+            isCallConnect = 1;
+            
+        } else if ([call.callState isEqualToString: CTCallStateDialing]) {
+            
+            isCallConnect = 1;
+            
+        } else if ([call.callState isEqualToString: CTCallStateDisconnected]) {
+            
+            isCallConnect = 0;
+            
+        } else if ([call.callState isEqualToString: CTCallStateIncoming]) {
+            
+            isCallConnect = 1;
+            
+        }
+        NSLog(@"\n\n callEventHandler: %@ \n\n", call.callState);
+    }];
+}
+
 - (void) playThisSong: (NSString *) userId andSongId:(NSString* ) songId
 {
+    NSLog(@"playThisSong: (NSString *) userId andSongId:(NSString* ) songId");
+    
     [UIApplication sharedApplication].idleTimerDisabled = YES;
+    
+    [self registerCalls];
     
     if (!isNotificationInstalled)
     {
@@ -155,13 +188,19 @@ double     playtime;
         
     }];
     
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
     
 }
 
 - (void) playThisSong: (NSString *) userId andSongId:(NSString* ) songId songtitle:(NSString* ) songtitle singer:(NSString* ) singer
 {
+    NSLog(@"playThisSong: (NSString *) userId andSongId:(NSString* ) songId songtitle:(NSString* ) songtitle singer:(NSString* ) singer");
+    
+    [self registerCalls];
+    
 	NSLog(@"song Id-->%@",songId);
 	self.singer=singer;
 	self.title=songtitle;
@@ -228,13 +267,17 @@ double     playtime;
         [[NSNotificationCenter defaultCenter] postNotificationName:@"ErrorAndGoNext" object:nil];
     }];
     
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 	
 }
 
 - (void) doStreaming: (NSString*) sessionID
 {
+    [self registerCalls];
+    
     NSString * strUrl = [[NSString alloc] initWithFormat:@"%@drm/download/streaming.jsp?sessionId=%@", [NSString stringWithUTF8String:STREAMING_SERVER], sessionID];
     
     NSString *escapedValue =
@@ -314,7 +357,7 @@ double     playtime;
             break;
             
         case 1:
-            NSLog(@"play song from local storage.");
+            NSLog(@"play song from local storage. %@", url);
             localStreamer = [[AVAudioPlayer alloc] initWithContentsOfURL: url error: NULL];
             [localStreamer setDelegate: self];
             
@@ -506,13 +549,15 @@ double     playtime;
 
 - (void) sendStreamingNotify
 {
+    NSLog(@"sendStreamingNotify");
+    
     int lr = 0;
     if (playtime <= 0 || [sessionId isEqualToString:@""])
         return;
     
     lr = (int) (songPlayProgress * 100 / playtime);
     NSString * listeningRate = [NSString stringWithFormat:@"%d",lr ];
-    NSString * channelCd     = @"CH0030";
+    NSString * channelCd     = [NSString stringWithUTF8String:CHANNEL_CODE];
     
     NSDictionary * params = [[[NSDictionary alloc] initWithObjectsAndKeys:
                               sessionId, @"sessionId",
@@ -538,7 +583,9 @@ double     playtime;
         NSLog(@"Send streaming notify failed.");
     }];
     
-    [operation start];
+    //[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 
@@ -756,6 +803,15 @@ double     playtime;
 
 - (void) playbackStateChanged: (NSNotification *) aNotification
 {
+    NSLog(@"isCallConnect %i", isCallConnect);
+    if(isCallConnect==1) {
+        if ([self isPaused]==NO) {
+            NSLog(@"PAUSE PLAYER");
+            [self pause];
+        }
+        return;
+    }
+    
     if ([self isWaiting])
     {
         [[NSNotificationCenter defaultCenter] postNotificationName:[NSString stringWithUTF8String:kNotifWaiting] object:nil];
@@ -810,8 +866,17 @@ double     playtime;
 
 - (void) setGettingNewSong: (NSNumber *) value
 {
+    if(isCallConnect==1) {
+        if ([self isPaused]==NO) {
+            NSLog(@"PAUSE PLAYER IN setGettingNewSong");
+            [self pause];
+        }
+        return;
+    }
+    
     isGettingNewSong = (BOOL) value.integerValue;
     NSLog(@"setting new song flag.");
+    NSLog(@"iscallconn %i",isCallConnect);
     if (!bTimerON)
     {
         [self createPlayerTimer];
@@ -889,13 +954,15 @@ double     playtime;
 
 - (void) periksaLagudanStream: (NSString *) songId
 {
+    NSLog(@"periksaLagudanStream");
+    
     NSString * sURL = [NSString stringWithFormat:@"%@songs/set", [NSString stringWithUTF8String:MAPI_SERVER]];
     
     NSDictionary * params = [[[NSDictionary alloc] initWithObjectsAndKeys:
                               songId, @"songIdList",
                               @"c", @"_DIR",
-                              @"iOS Client", @"_CNAME",
-                              @"DC6AE040A9200D384D4F08C0360A2607", @"_CPASS",
+                              [NSString stringWithUTF8String:CNAME], @"_CNAME",
+                              [NSString stringWithUTF8String:CPASS], @"_CPASS",
                               nil] autorelease];
     
     NSURL * URL = [NSURL URLWithString:sURL];
@@ -925,7 +992,7 @@ double     playtime;
             }
             else
             {
-                [[[[UIAlertView alloc] initWithTitle:@"Galat"
+                [[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
                                              message:@"Maaf, lagu yang diminta tidak diizinkan untuk didengar langsung dari server. Silahkan coba lagu yang lainnya, atau pastikan paket langganan Anda betul."
                                             delegate:nil
                                    cancelButtonTitle:@"OK"
@@ -934,7 +1001,7 @@ double     playtime;
         }
         @catch (NSException *exception) {
             NSLog(@"galat di waktu mengambil data di periksaLagudanStream.");
-            [[[[UIAlertView alloc] initWithTitle:@"Galat"
+            [[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
 										 message:@"Terjadi masalah ketika mengambil data dari server. Maaf atas ketidaknyamanan ini."
 										delegate:nil
 							   cancelButtonTitle:@"OK"
@@ -946,7 +1013,7 @@ double     playtime;
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
-			[[[[UIAlertView alloc] initWithTitle:@"Galat"
+			[[[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nill)
 										 message:@"Terjadi masalah ketika mengambil data dari server. Pastikan koneksi jaringan Anda dan coba kembali lagi."
 										delegate:nil
 							   cancelButtonTitle:@"OK"
@@ -964,7 +1031,9 @@ double     playtime;
     // pertontonkan pesan tunggu.
     [[NSNotificationCenter defaultCenter] postNotificationName:@"ShowWaitMessage" object:nil];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 

@@ -14,6 +14,8 @@
 #import "AudioToolbox/AudioToolbox.h"
 #import "mokletdevAppDelegate.h"
 #import "AFNetworking.h"
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
+
 @interface playerLocalViewController ()
 
 @end
@@ -202,7 +204,11 @@ AVAudioPlayer *audioPlayer;
 
 -(void)initLayout{
 	NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",self.sSongId];
-	[albumImageView setImageWithURL:[NSURL URLWithString:baseUrls] placeholderImage:[UIImage imageNamed:@"placeholder"]];
+    [albumImageView setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
 	[songTitle setText:self.sSongTitle];
 	[songAlbumName setText:self.sAlbumName];
 	[songArtistName setText:self.sArtistName];
@@ -246,7 +252,7 @@ AVAudioPlayer *audioPlayer;
     CGFloat eLeft = 20.0;
     CGFloat eTop = 31.0;
     songTitle = [[[UILabel alloc] initWithFrame:CGRectMake(eLeft, eTop, 212.0, 30.0)] autorelease];
-    songTitle.text = @"eka tampan, EKA TAMPAN, eka tampan, eka tampan";
+    songTitle.text = @"";
     songTitle.textColor = [UIColor whiteColor];
     songTitle.backgroundColor = [UIColor clearColor];
     [songTitle setFont:[UIFont fontWithName:@"OpenSans" size:24]];
@@ -274,7 +280,7 @@ AVAudioPlayer *audioPlayer;
     
     eTop += 14.0;
     songAlbumName = [[[UILabel alloc] initWithFrame:CGRectMake(eLeft, eTop, 200.0, 14.0)] autorelease];
-    songAlbumName.text = @"eka tampan, EKA TAMPAN, eka tampan, eka tampan";
+    songAlbumName.text = @"";
     songAlbumName.textColor = [UIColor whiteColor];
     songAlbumName.backgroundColor = [UIColor clearColor];
     [songAlbumName setFont:[UIFont fontWithName:@"OpenSans" size:12]];
@@ -339,12 +345,12 @@ AVAudioPlayer *audioPlayer;
     knob.backgroundColor = knobContainer.backgroundColor;
     knob.min = 0.0;
     knob.max = 1.0;
-    knob.doubleTapValue = 0.50;
-    knob.tripleTapValue = 1.0;
+    knob.doubleTapValue = 1.50;
+    knob.tripleTapValue = 3.0;
     //knob.value = 0.0;
     knob.value = [[MPMusicPlayerController applicationMusicPlayer] volume];
-    knob.displaysValue = NO;
-    knob.valueArcWidth = 1.50;
+    knob.displaysValue = YES;
+    knob.valueArcWidth = 2.0;
     [knobContainer addSubview:knob];
     
     volumeView = [[[MPVolumeView alloc] initWithFrame:knobContainer.bounds] autorelease];

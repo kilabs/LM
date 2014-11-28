@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>93D3BD4C-6A8C-4703-89DB-AEB5C25CE2F0</string>
+	<key>IDESourceControlProjectName</key>
+	<string>langitmusik</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>B826AF72187CE0907E07DE85DB06D756523D0385</key>
+		<string>http://112.78.141.27:8081/melonios.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>langitmusik.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>B826AF72187CE0907E07DE85DB06D756523D0385</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>http://112.78.141.27:8081/melonios.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>B826AF72187CE0907E07DE85DB06D756523D0385</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B826AF72187CE0907E07DE85DB06D756523D0385</string>
+			<key>IDESourceControlWCCName</key>
+			<string>langitmusikios</string>
+		</dict>
+	</array>
+</dict>
+</plist>

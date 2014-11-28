@@ -1312,6 +1312,17 @@ cleanup:
     }
 }
 
+- (float) getVolume
+{
+    AudioQueueParameterValue value;
+    OSStatus err = AudioQueueGetParameter(audioQueue, kAudioQueueParam_Volume, &value);
+    if (err != noErr) {
+        return 1.0f;        // default volume
+    }
+    
+    return (float) value;
+}
+
 #ifdef SHOUTCAST_METADATA
 - (void)updateMetaData:(NSString *)metaData
 {

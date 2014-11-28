@@ -6,9 +6,10 @@
 //  Copyright (c) 2013 mokletdev. All rights reserved.
 //
 
-#import "mokletdevViewController.h"
+#import "mokletdevVideoPlayer.h"
 #import "AFNetworking.h"
 //#import "songListObject.h"
+#import "PageCacheList.h"
 #import "VideoBrief.h"
 #import <social/Social.h>
 #import <accounts/Accounts.h>
@@ -23,12 +24,15 @@
 #import "MelonPlayer.h"
 #import "YRDropdownView.h"
 #import "netracell_.h"
-const int kLoadingCellTags = 1273;
+#import "UIImageView+HTUIImageCategoryNamespaceConflictResolver.h"
+
+static const int kLoadingCellTags = 1273;
 bool firstLoads=1;
 bool fetchs=0;
 bool searchs=0;
 bool openeds=0;
 bool search_actives=0;
+bool already_cache = 0;
 NSString * bitRateCDs;
 NSString * codecTypeCDs;
 NSString * contentIDs;
@@ -57,6 +61,8 @@ enum eTableContentType {
 @implementation mokletdevVideoPlayer
 
 
+
+
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -64,7 +70,7 @@ enum eTableContentType {
 		self.view.backgroundColor=[UIColor colorWithRed:0.875 green:0.875 blue:0.875 alpha:1];
 		spinner = [[TJSpinner alloc] initWithSpinnerType:kTJSpinnerTypeActivityIndicator];
         spinner.hidesWhenStopped = YES;
-        [spinner setColor:[UIColor colorWithRed:0.478 green:0.651 blue:0.176 alpha:1]];
+        [spinner setColor:[UIColor colorWithRed:COLORWITHRED green:COLORWITHGREEN blue:COLORWITHBLUE alpha:1]];
         [spinner setInnerRadius:10];
         [spinner setOuterRadius:20];
         [spinner setStrokeWidth:8];
@@ -153,7 +159,7 @@ enum eTableContentType {
 		[self.view addSubview:searchView];
 		
 		//[searchView addSubview:searchbar];
-		[self fetchData];
+		
         isLoadingData = YES;
         loadingDataTimer = [NSTimer scheduledTimerWithTimeInterval:5.0
                                                             target:self
@@ -168,7 +174,7 @@ enum eTableContentType {
 		top_label.backgroundColor=[UIColor clearColor];
 		
 		TitleBig=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 230, 44)];
-		TitleBig.text=@"Music Video";
+		TitleBig.text=NSLocalizedString(@"Music Videos", nil);
 		TitleBig.textAlignment=NSTextAlignmentCenter;
 		TitleBig.backgroundColor=[UIColor clearColor];
 		[TitleBig setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -244,9 +250,53 @@ enum eTableContentType {
 	
 }
 
+-(void)loadCacheData{
+    //check store data
+    NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+    PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"music_video" inContext:localContext];
+    if (cache){
+        total_page=[[cache.cacheData objectForKey:@"totalSize"]intValue]/10;
+        
+        //clear song data
+        [self.myVideoList removeAllObjects];
+		[MelonListVideo reloadData];
+        
+        //NSLog(@"LOAD CACHE %@", cache.cacheData);
+        
+        for(id netraDictionary in [cache.cacheData objectForKey:@"dataList"]){
+            VideoBrief * videoListObjectData = [[VideoBrief alloc] initWithDictionary:netraDictionary];
+			if (![self.myVideoList containsObject:videoListObjectData]) {
+                [self.myVideoList addObject:videoListObjectData];
+				
+            }
+			
+			[videoListObjectData release];
+		}
+        
+        //NSLog(@"LOAD CACHE AFTER %@", self.myVideoList);
+        
+        already_cache = 1;
+        
+        [spinner stopAnimating];
+        slowConnectionView.hidden = YES;
+		MelonListVideo.hidden=NO;
+        [MelonListVideo reloadData];
+		isLoadingData = NO;
+        slowConnectionView.hidden = YES;
+    }
+}
+
 
 -(void)fetchData{
-    NSString * offset = [NSString stringWithFormat:@"%d", (current_page -1) * 10];
+    if(current_page<=1){
+        MelonListVideo.hidden=YES;
+		MelonListVideo.allowsSelection=YES;
+        
+        //load cache first
+        [self loadCacheData];
+    }
+    
+    NSString * offset = [NSString stringWithFormat:@"%d", (current_page -1)];
     NSString * limit = @"10";
     
     NSString * sURL = [NSString stringWithFormat:@"%@mvs/new/converted", [NSString stringWithUTF8String:MAPI_SERVER]];
@@ -255,8 +305,8 @@ enum eTableContentType {
                               offset, @"offset",
                               limit, @"limit",
                               @"c", @"_DIR",
-                              @"iOS Client", @"_CNAME",
-                              @"DC6AE040A9200D384D4F08C0360A2607", @"_CPASS",
+                              [NSString stringWithUTF8String:CNAME], @"_CNAME",
+                              [NSString stringWithUTF8String:CPASS], @"_CPASS",
                               nil] autorelease];
     
 	//NSString *baseUrl=[NSString stringWithFormat:@"http://118.98.31.135:8000/mapi/mvs/new?offset=%d&limit=10&_DIR=c&_CNAME=iOS+Client&_CPASS=DC6AE040A9200D384D4F08C0360A2607",current_page];
@@ -272,40 +322,72 @@ enum eTableContentType {
     [httpClient setDefaultHeader:@"Content-Type" value:@"application/x-www-form-urlencoded"];
     NSMutableURLRequest * request = [httpClient requestWithMethod:@"GET" path:sURL parameters:params];
     [httpClient registerHTTPOperationClass:[AFJSONRequestOperation class]];
+    
+    NSLog(@"URL %@ %@", sURL, params);
 	
     AFJSONRequestOperation *operation=[[AFJSONRequestOperation alloc] initWithRequest:request];
 	
     //AFHTTPRequestOperation * operation =[[AFHTTPRequestOperation alloc] initWithRequest:request];
 	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
         NSLog(@"data video: %@", responseObject);
-		total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
-        NSLog(@"total_page = %d", total_page);
-        currentSongId = @"0";
-		for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
-			//NSLog(@"responseObject-->%@",responseObject);
-			//songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
-            VideoBrief * videoListObjectData = [[VideoBrief alloc] initWithDictionary:netraDictionary];
-			if (![self.myVideoList containsObject:videoListObjectData]) {
-                [self.myVideoList addObject:videoListObjectData];
-				
+        NSInteger offset =[[responseObject objectForKey:@"offset"]intValue];
+        
+        //check store data
+        NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+        PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"music_video" inContext:localContext];
+        if (!cache || offset>=10){
+            NSLog(@"LOAD FROM URL");
+            total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
+            NSLog(@"total_page = %d", total_page);
+            currentSongId = @"0";
+            for(id netraDictionary in [responseObject objectForKey:@"dataList"]){
+                //NSLog(@"responseObject-->%@",responseObject);
+                //songListObject *songListObjectData=[[songListObject alloc] initWithDictionary:netraDictionary];
+                VideoBrief * videoListObjectData = [[VideoBrief alloc] initWithDictionary:netraDictionary];
+                if (![self.myVideoList containsObject:videoListObjectData]) {
+                    [self.myVideoList addObject:videoListObjectData];
+                    
+                }
+                
+                [videoListObjectData release];
             }
-			
-			[videoListObjectData release];
-		}
+            
+            [spinner stopAnimating];
+            slowConnectionView.hidden = YES;
+            MelonListVideo.hidden=NO;
+            [MelonListVideo reloadData];
+            isLoadingData = NO;
+            slowConnectionView.hidden = YES;
+        }
 		
-		[spinner stopAnimating];
-        slowConnectionView.hidden = YES;
-		MelonListVideo.hidden=NO;
-        [MelonListVideo reloadData];
-		isLoadingData = NO;
-        slowConnectionView.hidden = YES;
+        
+        NSDictionary *responseJSON = [[NSDictionary alloc] initWithDictionary:responseObject];
+        //NSLog(@"responseJSON %@",responseJSON);
+        if(offset <= 1){
+            if(responseJSON.count > 0){
+                NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+                PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"music_video" inContext:localContext];
+                if (cache) {
+                    cache.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+                }
+                else {
+                    //save to local db
+                    PageCacheList *local = [PageCacheList MR_createInContext:localContext];
+                    local.pageType = @"music_video";
+                    local.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+                }
+                [localContext MR_save];
+            }
+            
+            NSLog(@"SAVE TO DB");
+        }
 		
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 		if(error){
             slowConnectionView.hidden = YES;
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Terjadi masalah ketika mengambil data dari server. Pastikan koneksi jaringan Anda dan coba kembali lagi."
 										 image:[UIImage imageNamed:@"dropdown-alert"]
 									  animated:YES
@@ -319,7 +401,9 @@ enum eTableContentType {
         slowConnectionView.hidden = YES;
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
 	[operation release];
     [httpClient release];
     currTableContentType = NEWRELEASE;
@@ -396,9 +480,11 @@ enum eTableContentType {
 	cell.play.tag=indexPath.row;
 	//NSString *baseUrls=[NSString stringWithFormat:@"http://melon.co.id/imageSong.do?songId=%@",dataObject.songId];
     NSString *baseUrls = [NSString stringWithFormat:@"%@image.do?fileuid=%@", [NSString stringWithUTF8String:WEB_SERVER], dataObject.vodLImgPath];
-	[cell.thumbnail setImageWithURL:[NSURL URLWithString:baseUrls]
-				   placeholderImage:[UIImage imageNamed:@"placeholder"]];
-	
+    [cell.thumbnail setImageWithURLRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:baseUrls]] placeholderImage:[UIImage imageNamed:@"placeholder"] success:^(NSURLRequest *request, NSHTTPURLResponse *response, UIImage *image) {
+        
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        
+    }];
 	//cell.length.text=[NSString stringWithFormat:@"%d : %d", minutes,seconds];
 	
 	//cell.genre.text=dataObject.;
@@ -430,14 +516,14 @@ enum eTableContentType {
 		
         mailer.mailComposeDelegate = self;
         
-        [mailer setSubject:@"Greetings From Melon"];
+        [mailer setSubject:@"Greetings From LangitMusik"];
         
         NSArray *toRecipients = [NSArray arrayWithObjects:nil];
         [mailer setToRecipients:toRecipients];
         
         
         
-        NSString *emailBody = @"HEy! Please Download Melon IOs App";
+        NSString *emailBody = @"HEy! Please Download LangitMusik IOs App";
         [mailer setMessageBody:emailBody isHTML:NO];
         
         // only for iPad
@@ -579,6 +665,9 @@ enum eTableContentType {
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Music Video", nil);
 }
 -(void)viewWillAppear:(BOOL)animated{
 	
@@ -589,6 +678,8 @@ enum eTableContentType {
 	//self.navigationItem.titleView = top_label;
 	[self.navigationController.navigationBar addSubview:top_label];
 	[self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"navbar2"] forBarMetrics:UIBarMetricsDefault];
+    
+    [self fetchData];
 
 }
 - (void)didReceiveMemoryWarning

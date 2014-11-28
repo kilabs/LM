@@ -16,6 +16,7 @@
 #import "UIViewController+MJPopupViewController.h"
 #import "addPlaylistForm.h"
 #import "YRDropdownView.h"
+#import "PageCacheList.h"
 @interface mokletdevPlayList () <addplaylistFormDelegate>{
 	addPlaylistForm *add;
 }
@@ -36,7 +37,7 @@
 		// Do any additional setup after loading the view.
 		spinner = [[TJSpinner alloc] initWithSpinnerType:kTJSpinnerTypeActivityIndicator];
         spinner.hidesWhenStopped = YES;
-        [spinner setColor:[UIColor colorWithRed:0.478 green:0.651 blue:0.176 alpha:1]];
+        [spinner setColor:[UIColor colorWithRed:COLORWITHRED green:COLORWITHGREEN blue:COLORWITHBLUE alpha:1]];
         [spinner setInnerRadius:10];
         [spinner setOuterRadius:20];
         [spinner setStrokeWidth:8];
@@ -155,7 +156,7 @@
 	top_label.backgroundColor=[UIColor clearColor];
 	
 	TitleBig=[[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 186, 44)] autorelease];
-	TitleBig.text=@"Playlist";
+	TitleBig.text=NSLocalizedString(@"Playlist",nil);
 	TitleBig.textAlignment=NSTextAlignmentCenter;
 	TitleBig.backgroundColor=[UIColor clearColor];
 	[TitleBig setFont:[UIFont fontWithName:@"HelveticaNeue-Bold" size:19]];
@@ -185,6 +186,9 @@
     [super viewDidLoad];
     
     top_label.hidden = NO;
+    
+    //tracking google analytics
+    self.screenName = NSLocalizedString(@"Screen Name Playlist", nil);
 }
 
 - (void)didReceiveMemoryWarning
@@ -201,12 +205,52 @@
 	[self.sidePanelController showRightPanel:YES];
 }
 
+-(void)loadCacheData{
+    //check store data
+    NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+    PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"playlist" inContext:localContext];
+    if (cache){
+        
+        //clear song data
+        [self.playListArray removeAllObjects];
+		[playListTable reloadData];
+        
+        //NSLog(@"LOAD CACHE %@", cache.cacheData);
+        
+        for (id data in [cache.cacheData objectForKey:@"dataList"])
+        {
+            PlaylistBrief * playlistItem = [[PlaylistBrief alloc] initWithDictionary:data];
+            if (![self.playListArray containsObject:playlistItem])
+            {
+                [self.playListArray addObject:playlistItem];
+                _playListArray = self.playListArray;
+            }
+            [playlistItem release];
+        }
+
+        
+        //NSLog(@"LOAD CACHE AFTER %@", self.playListArray);
+        
+        [playListTable setHidden:NO];
+		[spinner stopAnimating];
+        [playListTable reloadData];
+		
+        isLoadingData = NO;
+        slowConnectionView.hidden = YES;
+        
+    }
+}
+
 - (void) fetchUserPlaylist
 {
 	[self.playListArray removeAllObjects];
 	
 	playListTable.hidden=YES;
 	[spinner startAnimating];
+    
+    //load cache first
+    [self loadCacheData];
+    
 	NSMutableArray *users_active = [NSMutableArray arrayWithArray:[EUserBrief MR_findAllSortedBy:@"userId" ascending:YES]];
 	EUserBrief *user_now=[users_active objectAtIndex:0];
     
@@ -214,7 +258,7 @@
    // NSString * offset = [NSString stringWithFormat:@"%d", (current_page -1) * 10];
     //NSString * limit = @"10";
     
-    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=iOS Client&&_CPASS=DC6AE040A9200D384D4F08C0360A2607&_DIR=cu&_UNAME=%@&_UPASS=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,user_now.username,user_now.webPassword];
+    NSString * sURL = [NSString stringWithFormat:@"%@%@/playlists?_CNAME=%@&&_CPASS=%@&_DIR=cu&_UNAME=%@&_UPASS=%@", [NSString stringWithUTF8String:MAPI_SERVER], user_now.userId,[NSString stringWithUTF8String:CNAME],[NSString stringWithUTF8String:CPASS],user_now.username,user_now.webPassword];
     NSLog(@"surls--->%@",sURL);
 	NSURL *URL=[NSURL URLWithString:sURL];
    NSString *properlyEscapedURL = [sURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
@@ -231,24 +275,48 @@
     //AFHTTPRequestOperation * operation =[[AFHTTPRequestOperation alloc] initWithRequest:request];
 	[operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
         //NSLog(@"data playlists: %@", responseObject);
-		total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
-        //NSLog(@"total_page = %d", total_page);
-        for (id data in [responseObject objectForKey:@"dataList"])
-        {
-            PlaylistBrief * playlistItem = [[PlaylistBrief alloc] initWithDictionary:data];
-            if (![self.playListArray containsObject:playlistItem])
+        
+        //check store data
+        NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+        PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"playlist" inContext:localContext];
+        if (!cache){
+        
+            total_page=[[responseObject objectForKey:@"totalSize"]intValue]/10;
+            //NSLog(@"total_page = %d", total_page);
+            for (id data in [responseObject objectForKey:@"dataList"])
             {
-                [self.playListArray addObject:playlistItem];
-                _playListArray = self.playListArray;
+                PlaylistBrief * playlistItem = [[PlaylistBrief alloc] initWithDictionary:data];
+                if (![self.playListArray containsObject:playlistItem])
+                {
+                    [self.playListArray addObject:playlistItem];
+                    _playListArray = self.playListArray;
+                }
+                [playlistItem release];
             }
-            [playlistItem release];
+            [playListTable setHidden:NO];
+            [spinner stopAnimating];
+            [playListTable reloadData];
+            
+            isLoadingData = NO;
+            slowConnectionView.hidden = YES;
         }
-		[playListTable setHidden:NO];
-		[spinner stopAnimating];
-        [playListTable reloadData];
-		
-        isLoadingData = NO;
-        slowConnectionView.hidden = YES;
+        
+        NSDictionary *responseJSON = [[NSDictionary alloc] initWithDictionary:responseObject];
+        
+        if(responseJSON.count > 0){
+            NSManagedObjectContext *localContext = [NSManagedObjectContext MR_contextForCurrentThread];
+            PageCacheList *cache = [PageCacheList MR_findFirstByAttribute:@"pageType" withValue:@"playlist" inContext:localContext];
+            if (cache) {
+                cache.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+            }
+            else {
+                //save to local db
+                PageCacheList *local = [PageCacheList MR_createInContext:localContext];
+                local.pageType = @"playlist";
+                local.cacheData = [[NSDictionary alloc] initWithDictionary:responseObject];
+            }
+            [localContext MR_save];
+        }
 		
 		
 	} failure:^(AFHTTPRequestOperation *operation, NSError *error) {
@@ -256,7 +324,7 @@
 			playListTable.hidden=YES;
 			[spinner stopAnimating];
 			[YRDropdownView showDropdownInView:self.view
-										 title:@"Galat"
+										 title:NSLocalizedString(@"Error", nill)
 										detail:@"Terjadi masalah ketika mengambil data dari server. Pastikan koneksi jaringan Anda dan coba kembali lagi."
 										 image:[UIImage imageNamed:@"dropdown-alert"]
 									  animated:YES
@@ -269,7 +337,9 @@
         slowConnectionView.hidden = YES;
 	}];
     
-	[operation start];
+	//[operation start];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperation:operation];
     [httpClient release];
 }
 
@@ -336,7 +406,7 @@
 	return cell;
 }
 -(void)rename:(id)sender{
-	message = [[UIAlertView alloc] initWithTitle:@"Warning"
+	message = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Warning", nil)
 										 message:@"Hapus Playlist?"
 										delegate:self
 							   cancelButtonTitle:@"Ya"

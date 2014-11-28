@@ -16,12 +16,13 @@
 #import "TJSpinner.h"
 #import "ActionSheetPicker.h"
 #import "PlayerLib.h"
+#import "GAITrackedViewController.h"
 
 @class AbstractActionSheetPicker;
 @class MelonPlayer;
 @class StreamingBrief;
 
-@interface mokletdevViewController : UIViewController<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate,CMNavBarNotificationViewDelegate,UIGestureRecognizerDelegate>
+@interface mokletdevViewController : GAITrackedViewController<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate,CMNavBarNotificationViewDelegate,UIGestureRecognizerDelegate>
 {
 	UITableView *MelonList;
 	UIView *noConnection;

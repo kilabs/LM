@@ -24,6 +24,7 @@
 //
 
 #import "MYIntroductionView.h"
+#import "mokletdevAppDelegate.h"
 
 #define DEFAULT_BACKGROUND_COLOR [UIColor colorWithWhite:0 alpha:0.9]
 #define HEADER_VIEW_HEIGHT 50
@@ -234,6 +235,14 @@
     
     //Add the ContentScrollView to the introduction view
     [self addSubview:self.ContentScrollView];
+    
+    NSLog(@"buildContentScrollViewLeftToRight");
+    
+    //send to google analytics
+    id<GAITracker> defaultTracker = [[GAI sharedInstance] defaultTracker];
+    
+    [defaultTracker send:[[[GAIDictionaryBuilder createAppView]
+                           set:NSLocalizedString(@"Screen Name Tutorial", nil) forKey:kGAIScreenName] build]];
 }
 
 -(void)buildContentScrollViewRightToLeft{
@@ -268,6 +277,8 @@
     
     //Add the ContentScrollView to the introduction view
     [self addSubview:self.ContentScrollView];
+    
+    NSLog(@"buildContentScrollViewRightToLeft");
 }
 
 -(UIView *)PanelViewForPanel:(MYIntroductionPanel *)panel atXIndex:(CGFloat*)xIndex{
@@ -353,11 +364,30 @@
      *xIndex += self.ContentScrollView.frame.size.width;
 }
 
+- (IBAction)changePage:(id)sender {
+    UIPageControl *pager=sender;
+    int page = pager.currentPage;
+    CGRect frame = self.ContentScrollView.frame;
+    frame.origin.x = frame.size.width * page;
+    frame.origin.y = 0;
+    [self.ContentScrollView scrollRectToVisible:frame animated:YES];
+    
+    [self makePanelVisibleAtIndex:(NSInteger)page];
+    
+    NSLog(@"Change Page %d",page);
+    
+}
+
 -(void)buildFooterView{
     //Build Page Control
     self.PageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((self.frame.size.width - 185)/2, (self.ContentScrollView.frame.origin.y + self.ContentScrollView.frame.size.height + PAGE_CONTROL_PADDING), 185, 36)];
     self.PageControl.numberOfPages = Panels.count;
+    [self.PageControl addTarget:self action:@selector(changePage:) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.PageControl];
+    
+    //set page indicator color
+    self.PageControl.pageIndicatorTintColor = [UIColor colorWithRed:(100.0/255) green:(100.0/255) blue:(100.0/255) alpha:1 ];
+    self.PageControl.currentPageIndicatorTintColor = [UIColor colorWithRed:(0.0/255) green:(0.0/255) blue:(0.0/255) alpha:1 ];
     
     //Build Skip Button
     if (LanguageDirection == MYLanguageDirectionRightToLeft) {
@@ -368,7 +398,8 @@
         self.SkipButton = [[UIButton alloc] initWithFrame:CGRectMake(self.frame.size.width - 80, self.PageControl.frame.origin.y, 80, self.PageControl.frame.size.height)];
     }
     
-    [self.SkipButton setTitle:@"Skip" forState:UIControlStateNormal];
+    [self.SkipButton setTitleColor: [UIColor colorWithRed:(0.0/255) green:(0.0/255) blue:(0.0/255) alpha:1 ] forState: UIControlStateNormal];
+    [self.SkipButton setTitle:NSLocalizedString(@"Skip", nil) forState:UIControlStateNormal];
     [self.SkipButton addTarget:self action:@selector(skipIntroduction) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.SkipButton];
 }
@@ -473,6 +504,7 @@
 #pragma mark - UIScrollView Delegate
 
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
+    NSLog(@"scrollViewDidEndDecelerating");
     if (LanguageDirection == MYLanguageDirectionLeftToRight) {
         self.CurrentPanelIndex = scrollView.contentOffset.x/self.ContentScrollView.frame.size.width;
         
@@ -528,6 +560,7 @@
 }
 
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    //NSLog(@"scrollViewDidScroll");
     if (LanguageDirection == MYLanguageDirectionLeftToRight) {
         if (self.CurrentPanelIndex == (panelViews.count - 1)) {
             self.alpha = ((self.ContentScrollView.frame.size.width*panelViews.count)-self.ContentScrollView.contentOffset.x)/self.ContentScrollView.frame.size.width;

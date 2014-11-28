@@ -200,9 +200,11 @@
 			[self.color set];
 		NSString *valueString = nil;
 		if (self.biDirectional)
-			valueString = [NSString stringWithFormat:@"%02.0f%%", ((self.value - self.min - (self.max - self.min) / 2) / (self.max - self.min)) * 100];
+			//valueString = [NSString stringWithFormat:@"%02.0f%%", ((self.value - self.min - (self.max - self.min) / 2) / (self.max - self.min)) * 100];
+            valueString = [NSString stringWithFormat:@"%.0f%%", ((self.value - self.min - (self.max - self.min) / 2) / (self.max - self.min)) * 100];
 		else
-			valueString = [NSString stringWithFormat:@"%03.0f%%", ((self.value - self.min) / (self.max - self.min)) * 100];
+			//valueString = [NSString stringWithFormat:@"%03.0f%%", ((self.value - self.min) / (self.max - self.min)) * 100];
+            valueString = [NSString stringWithFormat:@"%.0f%%", ((self.value - self.min) / (self.max - self.min)) * 100];
 		CGSize valueStringSize = [valueString sizeWithFont:self.labelFont
 												  forWidth:boundsRect.size.width
 											 lineBreakMode:UILineBreakModeTailTruncation];
