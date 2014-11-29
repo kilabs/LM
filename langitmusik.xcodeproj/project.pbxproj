@@ -16,6 +16,7 @@
 		0C6E43071A28ACDA0025ADC7 /* Readme.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0C6E42B91A28ACDA0025ADC7 /* Readme.txt */; };
 		0C6E430F1A28AD460025ADC7 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C6E430E1A28AD460025ADC7 /* FacebookSDK.framework */; };
 		0C6E43111A28B1A50025ADC7 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0C6E43101A28B1A50025ADC7 /* Media.xcassets */; };
+		0C6E43191A28C38A0025ADC7 /* mokletdevHomeTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C6E43181A28C38A0025ADC7 /* mokletdevHomeTableViewCell.m */; };
 		7721DEFA17226BF700074B70 /* YLProgressBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 7721DEF917226BF700074B70 /* YLProgressBar.m */; };
 		77225A1317151B0700ABC410 /* DCControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 77225A1017151B0700ABC410 /* DCControl.m */; };
 		77225A1417151B0700ABC410 /* DCKnob.m in Sources */ = {isa = PBXBuildFile; fileRef = 77225A1217151B0700ABC410 /* DCKnob.m */; };
@@ -362,6 +363,9 @@
 		0C6E42B91A28ACDA0025ADC7 /* Readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Readme.txt; sourceTree = "<group>"; };
 		0C6E430E1A28AD460025ADC7 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
 		0C6E43101A28B1A50025ADC7 /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
+		0C6E43121A28B8EF0025ADC7 /* font.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = font.ttf; sourceTree = "<group>"; };
+		0C6E43171A28C38A0025ADC7 /* mokletdevHomeTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mokletdevHomeTableViewCell.h; sourceTree = "<group>"; };
+		0C6E43181A28C38A0025ADC7 /* mokletdevHomeTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mokletdevHomeTableViewCell.m; sourceTree = "<group>"; };
 		7721DEF817226BF700074B70 /* YLProgressBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YLProgressBar.h; sourceTree = "<group>"; };
 		7721DEF917226BF700074B70 /* YLProgressBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YLProgressBar.m; sourceTree = "<group>"; };
 		7721DEFB17227A5800074B70 /* ARCMacro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARCMacro.h; sourceTree = "<group>"; };
@@ -927,6 +931,22 @@
 			path = Library;
 			sourceTree = "<group>";
 		};
+		0C6E43131A28C28D0025ADC7 /* xib */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = xib;
+			sourceTree = "<group>";
+		};
+		0C6E43161A28C3750025ADC7 /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				0C6E43171A28C38A0025ADC7 /* mokletdevHomeTableViewCell.h */,
+				0C6E43181A28C38A0025ADC7 /* mokletdevHomeTableViewCell.m */,
+			);
+			name = Cell;
+			sourceTree = "<group>";
+		};
 		77225A0E17151B0700ABC410 /* DCControl */ = {
 			isa = PBXGroup;
 			children = (
@@ -1162,6 +1182,7 @@
 		D04E28F316E5C2F5003F6741 /* font */ = {
 			isa = PBXGroup;
 			children = (
+				0C6E43121A28B8EF0025ADC7 /* font.ttf */,
 				D08AC777170AA16E001B3C19 /* MuseoSans_100.otf */,
 				D08AC778170AA16E001B3C19 /* MuseoSans_300.otf */,
 				D02A394616F5F58F00FE704D /* MyriadPro-Semibold.otf */,
@@ -1188,6 +1209,7 @@
 		D0710CF916E4DEBB00D66675 /* view */ = {
 			isa = PBXGroup;
 			children = (
+				0C6E43131A28C28D0025ADC7 /* xib */,
 				D0CEA7C717014DD600B2A026 /* search-music */,
 				D032048E1700026A009489A3 /* search-result */,
 				D032048816FE045F009489A3 /* guide */,
@@ -1204,6 +1226,7 @@
 		D0710CFA16E4DEBB00D66675 /* center */ = {
 			isa = PBXGroup;
 			children = (
+				0C6E43161A28C3750025ADC7 /* Cell */,
 				D0249AD31711B7CE00F71F42 /* topChart */,
 				D0710CFB16E4DEBB00D66675 /* mokletdevViewController.h */,
 				D0710CFC16E4DEBB00D66675 /* mokletdevViewController.m */,
@@ -1800,7 +1823,7 @@
 				ORGANIZATIONNAME = mokletdev;
 				TargetAttributes = {
 					D08AA32916DDE53A002D9733 = {
-						DevelopmentTeam = 2NPEA4RFJT;
+						DevelopmentTeam = EF9SC2ZZ25;
 					};
 				};
 			};
@@ -2010,6 +2033,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				772C52ED1858408A00B4B078 /* SearchCellSong.m in Sources */,
+				0C6E43191A28C38A0025ADC7 /* mokletdevHomeTableViewCell.m in Sources */,
 				7724DA94185711F900B41075 /* NSDictionary+Merge.m in Sources */,
 				7724DA911856FDD800B41075 /* PageCacheList.m in Sources */,
 				772C0C2B1855D3C7004E2D09 /* AlbumListControllerByArtist.m in Sources */,
@@ -2246,7 +2270,7 @@
 				);
 				PRODUCT_NAME = LangitMusik;
 				PROVISIONING_PROFILE = "";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "FF4A1BFE-631E-4CC3-B323-EC77044714D5";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos6.1;
 				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
@@ -2283,7 +2307,7 @@
 				);
 				PRODUCT_NAME = LangitMusik;
 				PROVISIONING_PROFILE = "";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "FF4A1BFE-631E-4CC3-B323-EC77044714D5";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos6.1;
 				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;

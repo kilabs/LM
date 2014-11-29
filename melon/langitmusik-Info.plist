@@ -13,7 +13,7 @@
 	<key>CFBundleIcons~ipad</key>
 	<dict/>
 	<key>CFBundleIdentifier</key>
-	<string>com.langitmusik.melon</string>
+	<string>com.netra.melon</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -50,6 +50,7 @@
 		<string>MuseoSans_100.otf</string>
 		<string>MuseoSans_300.otf</string>
 		<string>MuseoSans_700.otf</string>
+		<string>font.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
