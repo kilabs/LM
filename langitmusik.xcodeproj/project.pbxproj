@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C37154B1A308217000CF6F4 /* NewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C37154A1A308217000CF6F4 /* NewCell.m */; };
 		0C6E42BA1A28ACDA0025ADC7 /* Changelog.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0C6E423F1A28ACD90025ADC7 /* Changelog.txt */; };
 		0C6E42D91A28ACDA0025ADC7 /* Readme.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0C6E42751A28ACD90025ADC7 /* Readme.txt */; };
 		0C6E42DA1A28ACDA0025ADC7 /* Changelog.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0C6E42771A28ACD90025ADC7 /* Changelog.txt */; };
@@ -339,6 +340,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0C3715491A308217000CF6F4 /* NewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewCell.h; sourceTree = "<group>"; };
+		0C37154A1A308217000CF6F4 /* NewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NewCell.m; sourceTree = "<group>"; };
 		0C6E423F1A28ACD90025ADC7 /* Changelog.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Changelog.txt; sourceTree = "<group>"; };
 		0C6E426B1A28ACD90025ADC7 /* GAI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAI.h; sourceTree = "<group>"; };
 		0C6E426C1A28ACD90025ADC7 /* GAIDictionaryBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GAIDictionaryBuilder.h; sourceTree = "<group>"; };
@@ -1238,6 +1241,8 @@
 				77F19AF81851D0870074536D /* albumListObject.m */,
 				77F19AFA1851E3C50074536D /* artistListObject.h */,
 				77F19AFB1851E3DA0074536D /* artistListObject.m */,
+				0C3715491A308217000CF6F4 /* NewCell.h */,
+				0C37154A1A308217000CF6F4 /* NewCell.m */,
 			);
 			path = center;
 			sourceTree = "<group>";
@@ -2162,6 +2167,7 @@
 				7723F14F175C37D70038C01F /* PlayerConfig.m in Sources */,
 				7723F152175C37D70038C01F /* LocalPlaylist1.m in Sources */,
 				7723F155175C3D7F0038C01F /* PlayerLib.m in Sources */,
+				0C37154B1A308217000CF6F4 /* NewCell.m in Sources */,
 				7791883C178EAD6E00F1151E /* Layanan.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

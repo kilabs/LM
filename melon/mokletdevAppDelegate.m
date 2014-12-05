@@ -111,14 +111,7 @@ NSString * tempWebPassword;
         self.playOption = playerConfig.playOption.integerValue;
         NSLog(@"PlayOption: %d, autoLogin: %d, firstUse: %d", self.playOption, playerConfig.autoLogin.integerValue, playerConfig.firstUse.integerValue);
         
-        if (playerConfig.firstUse == [NSNumber numberWithInt:1])
-        {
-            [self loadIntro];
-        }
-        else
-        {
-            [self loadWindow];
-        }
+       [self loadWindow];
         
         // auto login -- pasti autologin
         BOOL autologin = playerConfig.autoLogin.intValue;
@@ -225,7 +218,7 @@ NSString * tempWebPassword;
         
         self.playOption = REPEAT_NO;
         
-        [self loadIntro];
+        [self loadWindow];
     }
     
 //	if([EPassword isEqualToString:@"213"]){
@@ -272,7 +265,6 @@ NSString * tempWebPassword;
 	self.guidePage=[[intro alloc]init];
     self.window.rootViewController = self.guidePage;
 	[self.viewController presentModalViewController:self.guidePage animated:YES];
-    NSLog(@"intro show");
     [self.window makeKeyAndVisible];
 }
 -(void)loadWindow{
@@ -287,9 +279,9 @@ NSString * tempWebPassword;
 	self.leftView=[[mokletdevLeftViewController alloc]init];
 	self.rightView=[[mokletdevRightViewController alloc]init];
 	[self setCenter:nil];
-	self.mainViewController.rightPanel=self.rightView;
 	self.mainViewController.leftPanel=self.leftView;
 	self.window.rootViewController =self.mainViewController;
+    
 	MPlayer = [MelonPlayer sharedInstance];
 	[self.window makeKeyAndVisible];
 
@@ -344,10 +336,6 @@ NSString * tempWebPassword;
 	
 	else if([[dict objectAtIndex:0] isEqualToString:self.lastController]){
 		
-	}
-    
-    else if([[dict objectAtIndex:0] isEqualToString:@"intro"]){
-		[self loadIntro];
 	}
     
 	else{
